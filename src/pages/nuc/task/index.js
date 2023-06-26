@@ -153,6 +153,7 @@ class App extends React.Component {
             page: this.state.current_page,
             page_size: PageSize,
         })
+        console.log(data)
         await this.setState({loading: false})
         data.list = await this.formatSubTaskList(data.list)
 
@@ -252,7 +253,7 @@ class App extends React.Component {
         })
         let requestMap = {}
         for (var j in requests.list) {
-            requestMap[requests.list[i].request_id] = requests.list[i]
+            requestMap[requests.list[j].request_id] = requests.list[j]
         }
         for (var k in data.list) {
             try {
