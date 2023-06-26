@@ -107,7 +107,7 @@ class App extends React.Component {
             'key': 'opt',
             'render': (col, record, index) => (
                 <Space>
-                    <Button onClick={this.getDetail.bind(this, record)} size="small" type="text">详情</Button>
+                    <Button onClick={this.getDetail.bind(this, record)} size="mini" type="text">详情</Button>
                 </Space>
             )
         }
@@ -121,9 +121,9 @@ class App extends React.Component {
             current_page: 1,
             total_page: 0,
             workList: {},
-            currentSubTask : null,
-            processList : [],
-            visible : false,
+            currentSubTask: null,
+            processList: [],
+            visible: false,
         }
     }
     async componentDidMount() {
@@ -153,6 +153,7 @@ class App extends React.Component {
             page: this.state.current_page,
             page_size: PageSize,
         })
+        await this.setState({loading: false})
         data.list = await this.formatSubTaskList(data.list)
 
         await this.setState(data)
@@ -228,45 +229,81 @@ class App extends React.Component {
         let data = await api.queryShepherd({
             table: 'task_process',
             order_by: 'id asc',
-            query : {
-                sub_task_id : record.id,
+            query: {
+                sub_task_id: record.id,
             },
             page: 1,
             page_size: PageSize,
         })
-        console.log(data.list)
+        let thirdIds = []
+        for (var i in data.list) {
+            try {
+                let output = JSON.parse(data.list[i].output)
+                thirdIds.push(output.third_id)
+            } catch (e) { }
+        }
+        let requests = await api.queryShepherd({
+            table: 'process_request',
+            query: {
+                request_id: thirdIds,
+            },
+            page: 1,
+            page_size: PageSize,
+        })
+        let requestMap = {}
+        for (var j in requests.list) {
+            requestMap[requests.list[i].request_id] = requests.list[i]
+        }
+        for (var k in data.list) {
+            try {
+                let output = JSON.parse(data.list[k].output)
+                if (requestMap[output.third_id] != undefined) {
+                    data.list[k]['process_request'] = JSON.stringify(requestMap[output.third_id])
+                } else {
+                    data.list[k]['process_request'] = ''
+                }
+            } catch (e) {
+                data.list[k]['process_request'] = ''
+            }
+        }
         await this.setState({
-            currentSubTask : lodash.clone(record),
-            processList : data.list,
-            visible : true
+            currentSubTask: lodash.clone(record),
+            processList: data.list,
+            visible: true
         })
     }
     htmlTitle = () => {
         return <h3><Space>
-            任务<Button onClick={this.getTaskList}>刷新</Button>
+            任务<Button onClick={this.getTaskList} size='mini' type='primary'>刷新</Button>
         </Space></h3>
     }
 
     render() {
         return <>
-            <Table data={this.state.list} columns={this.columns} pagination={false} rowKey={'id'} />
+            <Table data={this.state.list} columns={this.columns} pagination={false} rowKey={'id'} loading={this.state.loading}/>
             <div style={{ textAlign: 'center', margin: '10px auto' }}>
                 <Pagination size={'large'} total={this.state.total} showTotal hideOnSinglePage current={this.state.current_page} pageSize={PageSize} onChange={this.changePage} />
             </div>
-            <Modal visible={this.state.visible} style={{width:'70%'}} onCancel={() => this.setState({visible:false})}>
+            <Modal visible={this.state.visible} style={{ width: '70%' }} onCancel={() => this.setState({ visible: false })} title={this.state.currentSubTask != null ? this.state.currentSubTask.task_id : ''} onOk={() => this.setState({ visible: false })}>
                 <p>任务输入:</p>
                 {
-                    this.state.currentSubTask != null ?  <Input.TextArea value={this.state.currentSubTask.input + ''} /> : null
+                    this.state.currentSubTask != null ? <Input.TextArea value={this.state.currentSubTask.input + ''} /> : null
                 }
-               
+
+                <p>任务输出:</p>
+                {
+                    this.state.currentSubTask != null ? <Input.TextArea value={this.state.currentSubTask.output + ''} /> : null
+                }
                 {this.state.processList.map(item => {
-                    return <Card title={'算子：' + item.process + "【状态：" +item.state + '】'} style={{marginTop:'15px'}}>
+                    return <Card title={'算子：' + item.process + "【状态：" + item.state + '】'} style={{ marginTop: '15px' }}>
                         <p>Input</p>
-                        <Input.TextArea value={item.input} rows={5}/>
-                        <p>Output</p>
-                        <Input.TextArea value={item.output} rows={5}/>
-                        <p>Callback</p>
-                        <Input.TextArea value={item.callback} rows={5}/>
+                        <Input.TextArea value={item.input} rows={5} />
+                        <p>Output【cost：{item.cost}ms】</p>
+                        <Input.TextArea value={item.output} rows={5} />
+                        <p>Callback【cost：{item.callback_cost}ms】</p>
+                        <Input.TextArea value={item.callback} rows={5} />
+                        <p>ProcessRequest</p>
+                        <Input.TextArea value={item.process_request} rows={5} />
                     </Card>
                 })}
             </Modal>

@@ -55,8 +55,7 @@ class App extends React.Component {
         }
     }
     async componentDidMount() {
-        //this.getTFData()
-        this.refreshData()
+        this.getTFData()
     }
     exportAllData = async () => {
     }
@@ -67,8 +66,14 @@ class App extends React.Component {
         }, 2000)
     }
     getTFData = async () => {
+        if(this.state.loading) {
+            return
+        }
         await this.setState({
             loading: true,
+            projectList : [],
+            importLog : [],
+            vrfileList : [],
         })
         let data = await api.getTFState()
         if (data.code != 0) {
@@ -78,7 +83,6 @@ class App extends React.Component {
         let projectList = await api.getTFProjects()
         let importLog = await api.getTFImportLog()
         let vrfileList = await api.getTFVRFileList()
-        console.log(vrfileList)
         this.setState({
             tfState: data.data.Result,
             projectList: projectList,
@@ -90,7 +94,7 @@ class App extends React.Component {
     htmlTitle = () => {
         return <h3><Space>
             TF卡
-            <Button onClick={this.exportAllData} type='primary'>导出JSON</Button>
+            <Button onClick={this.getTFData} type='primary' size="mini">刷新</Button>
         </Space></h3>
     }
 
