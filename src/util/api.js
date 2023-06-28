@@ -119,6 +119,10 @@ const getTFVRFileList = async () => {
     if(result == null) {
         return []
     }
+    if(!result.data.Success) {
+        return []
+    }
+    console.log(result)
     return result.data.Result
 }
 

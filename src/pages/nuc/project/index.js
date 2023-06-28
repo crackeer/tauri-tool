@@ -1,6 +1,6 @@
 import React from 'react';
-import 'jsoneditor/dist/jsoneditor.css';
-import { Button, Input, Grid, Space, Card, Tag, Pagination } from '@arco-design/web-react';
+import { Button, Input, Grid, Space, Card, Tag, Pagination, Empty } from '@arco-design/web-react';
+import { IconExclamation, IconLoading } from '@arco-design/web-react/icon';
 import api from '@/util/api';
 import common from '@/util/common';
 import { open } from '@tauri-apps/api/shell';
@@ -55,7 +55,7 @@ class App extends React.Component {
     }
     changePage = async (value) => {
         await this.setState({
-            current_page : value
+            current_page: value
         })
         this.getProjectList()
     }
@@ -101,7 +101,8 @@ class App extends React.Component {
         }
         await this.setState(data)
         await this.setState({
-            workList: workData
+            workList: workData, 
+            loading : false
         })
     }
     htmlTitle = () => {
@@ -111,13 +112,59 @@ class App extends React.Component {
     }
 
     render() {
+        if (this.state.loading) {
+            return <Card>
+                <Empty
+                    icon={
+                        <div
+                            style={{
+                                background: '#0099CC',
+                                display: 'inline-flex',
+                                borderRadius: '50%',
+                                width: 50,
+                                height: 50,
+                                fontSize: 30,
+                                alignItems: 'center',
+                                color: 'white',
+                                justifyContent: 'center',
+                            }}
+                        >
+                           <IconLoading />
+                        </div>
+                    }
+                    description='努力加载中...'
+                /></Card>
+        }
+        if (this.state.list.length < 1 && this.state.current_page == 1) {
+            return <Card>
+                <Empty
+                    icon={
+                        <div
+                            style={{
+                                background: '#f2994b',
+                                display: 'inline-flex',
+                                borderRadius: '50%',
+                                width: 50,
+                                height: 50,
+                                fontSize: 30,
+                                alignItems: 'center',
+                                color: 'white',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            <IconExclamation />
+                        </div>
+                    }
+                    description='暂无项目，请检查，或刷新重试'
+                /></Card>
+        }
         return <>
             <Row gutter={10}>
                 {
                     this.state.list.map((item, index) => {
-                        return <Col span={24} style={{ marginBottom: '30px' }}><Card title={
+                        return <Col span={24} style={{ marginBottom: '30px' }} key={item.id}><Card title={
                             <Space size={'large'}>
-                                <span>第{(this.state.current_page -1) * PageSize + index + 1}条：{item.name}</span>
+                                <span>第{(this.state.current_page - 1) * PageSize + index + 1}条：{item.name}</span>
                                 <span><ProjectStatus status={item.status} is_deleted={item.is_deleted} /></span>
                             </Space>
                         } key={item.id} hoverable={true}>
@@ -146,7 +193,7 @@ class App extends React.Component {
                     })
                 }
             </Row>
-            <div style={{ textAlign: 'center', margin:'10px auto' }}>
+            <div style={{ textAlign: 'center', margin: '10px auto' }}>
                 <Pagination size={'large'} total={this.state.total} showTotal hideOnSinglePage current={this.state.current_page} pageSize={PageSize} onChange={this.changePage} />
             </div>
 

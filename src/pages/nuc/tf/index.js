@@ -83,6 +83,7 @@ class App extends React.Component {
         let projectList = await api.getTFProjects()
         let importLog = await api.getTFImportLog()
         let vrfileList = await api.getTFVRFileList()
+        console.log(vrfileList)
         this.setState({
             tfState: data.data.Result,
             projectList: projectList,
@@ -106,12 +107,12 @@ class App extends React.Component {
 
             </Card>
             <div style={{ marginTop: '10px' }}>
-                <h3>项目</h3>
-                <Table data={this.state.projectList} columns={this.columns} border={true} pagination={false} />
+                <h3>TF卡内项目</h3>
+                <Table data={this.state.projectList} columns={this.columns} border={true} pagination={false} rowKey={"project_id"}/>
             </div>
 
             <div style={{ marginTop: '10px' }}>
-                <h3>项目导入记录</h3>
+                <h3>本机项目导入记录</h3>
                 <Card>
                     <Row style={{ height: '50%', overflow: 'scroll' }}>
                         {
@@ -133,7 +134,7 @@ class App extends React.Component {
             </div>
 
             <div style={{ marginTop: '10px' }}>
-                <h3>VRFile列表</h3>
+                <h3>TF卡内的VRFile</h3>
                 <Card>
                         {this.state.vrfileList.map(item => {
                             return <p>{item}</p>
