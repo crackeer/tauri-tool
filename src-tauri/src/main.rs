@@ -5,7 +5,8 @@
 mod command;
 
 use std::vec;
-
+#[macro_use]
+extern crate lazy_static;
 use command::file::{
     create_dir, create_file, delete_file, delete_folder, get_file_content, rename_file,
     simple_read_dir, write_file, write_media_file, file_exists

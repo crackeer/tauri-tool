@@ -5,11 +5,24 @@ use std::path::Path;
 use base64::{Engine as _, engine::general_purpose};
 use rust_embed::{RustEmbed};
 use serde::{Deserialize, Serialize};
+use std::sync::{Arc, Mutex};
+use std::collections::HashMap;
 
 #[derive(RustEmbed)]
 #[folder = "static/"]
 struct Asset;
 
+
+pub struct Task {
+    dir: String,
+    state : String,
+    percent: usize,
+    message: String,
+}
+
+lazy_static! {
+    pub static ref TASK_LIST: Arc<Mutex<Vec<Task>>> = Arc::new(Mutex::new(Vec::new()));
+}
 // Example code that deserializes and serializes the model.
 // extern crate serde;
 // #[macro_use]
@@ -246,4 +259,13 @@ pub async fn exec_download_work(dir: String, work_json: String) -> String {
     }
     download_work_to(&data.unwrap(), path.join("preview").as_path()).await;
     String::from("ok")
+}
+
+
+fn download_work_from_task_list() {
+    if TASK_LIST.lock().unwrap().len > 0 {
+        return
+    }
+    TASK_LIST.lock().unwrap().
+
 }
