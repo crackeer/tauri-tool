@@ -36,7 +36,9 @@ class App extends React.Component {
     htmlTitle = () => {
         return <h3><Space>
             {this.state.activeFile}
-            <Button onClick={this.switchEdit} type='primary'>{this.state.mode == 'view' ? '编辑' : '查看'}</Button>
+            <Button onClick={this.switchEdit} type='primary' size="mini">
+                {this.state.mode == 'view' ? '编辑' : '查看'}
+            </Button>
         </Space></h3>
     }
     loadFile = async (item, mode) => {
@@ -68,7 +70,7 @@ class App extends React.Component {
     loadMarkdown = async (content, mode) => {
         await this.setState({
             value: content,
-            file_type: 'markdown',
+            file_type: 'md',
             mode: mode,
             viewHeight: common.getViewHeight()
         })
@@ -119,16 +121,14 @@ class App extends React.Component {
     }
 
     render() {
-        if (this.state.file_type == 'markdown') {
+        if (this.state.file_type == 'md') {
             if (this.state.mode === "view") {
                 return <div style={{ padding: '0 30px' }}>
                     <MDViewer value={this.state.value} file={this.state.activeFile} />
                 </div>
             }
             return <div style={{ height: this.state.viewHeight, overflow: 'scroll', position: 'relative' }} onKeyUp={this.handleKeyUp} tabIndex="-1">
-                <MDEditor value={this.state.value} file={this.state.activeFile} ref={(ele) => {
-                    this.editor = ele
-                }} onChangeText={this.changeText} />
+                <MDEditor value={this.state.value} file={this.state.activeFile}  onChangeText={this.changeText} />
             </div>
         }
         if (this.state.file_type == 'json') {

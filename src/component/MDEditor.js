@@ -10,7 +10,6 @@ import mermaid from '@bytemd/plugin-mermaid';
 import gfm from '@bytemd/plugin-gfm'
 import math from '@bytemd/plugin-math'
 import image from '../plugins/image'
-import copyCode from '../plugins/code-copy'
 
 import mediumZoom from '@bytemd/plugin-medium-zoom'
 import gemoji from '@bytemd/plugin-gemoji'
@@ -37,10 +36,8 @@ const getUploadConfig = async (activeFile) => {
     }
 }
 
-const MDEditor = React.forwardRef((props, ref) => {
-    const [file, setFile] = React.useState("");
+const MDEditor = (props) => {
     const [sep, setSep] = React.useState("/");
-
 
     async function doUploadImages(files) {
         let buffer = await files[0].arrayBuffer()
@@ -58,26 +55,21 @@ const MDEditor = React.forwardRef((props, ref) => {
             }])
         })
     }
-    const initValue = async (file) => {
+    const initValue = async () => {
         const { sep } = await import('@tauri-apps/api/path')
         setSep(sep)
-        setFile(file)
     }
 
     useEffect(() => {
-        initValue(props.file)
+        initValue()
     }, [])
-    React.useImperativeHandle(
-        ref,
-        () => ({ initValue })
-    );
 
     return <Editor
         value={props.value}
-        plugins={[image(file, sep), ...plugins]}
+        plugins={[image(props.file, sep), ...plugins]}
         mode={props.editMode || 'split'}
         uploadImages={doUploadImages}
         onChange={props.onChangeText} />
-})
+}
 
 export default MDEditor;

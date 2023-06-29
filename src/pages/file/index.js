@@ -1,7 +1,6 @@
 import React from 'react';
 import { Button, Table, Timeline, List } from '@arco-design/web-react';
 import { open } from '@tauri-apps/api/dialog';
-import Markdown from '@/component/Markdown';
 import cache from '@/util/cache';
 import invoke from '@/util/invoke'
 import common from '@/util/common'
@@ -15,8 +14,6 @@ class App extends React.Component {
         this.state = {
             files: [],
         }
-        this.directory = React.createRef()
-        this.markdown = React.createRef()
     }
     async componentDidMount() {
         let list = await cache.getOpenFiles()
@@ -27,10 +24,10 @@ class App extends React.Component {
     htmlTitle = () => {
         return <h3><Space>
             文件
-            <Button onClick={this.addFile} type="primary">添加</Button>
-            <Button onClick={this.openFile} type="primary">打开</Button>
-            <Button type='link' href={'/file/create?file_type=json'}>新建JSON</Button>
-            <Button type='link' href={'/file/create?file_type=md'}>新建Markdown</Button>
+            <Button onClick={this.addFile} type="primary" size="mini">添加</Button>
+            <Button onClick={this.openFile} type="primary" size="mini">打开</Button>
+            <Button type='link' href={'/file/create?file_type=json'} size="mini">新建JSON</Button>
+            <Button type='link' href={'/file/create?file_type=md'} size="mini">新建MD</Button>
         </Space></h3>
     }
     openFile = async () => {
@@ -39,7 +36,7 @@ class App extends React.Component {
             multiple: false,
             filters: [{
                 name: 'File',
-                extensions: ['md', 'json']
+                extensions: ['md', 'json', 'go']
             }],
         });
         if (selected == null || selected.length < 1) {

@@ -13,6 +13,9 @@ export default function localImageSrc(currentFile, sep) {
                 return null
             }
 
+            if(url.pathname == null) {
+                return null
+            }
             
             let parts = currentFile.split(sep)
             parts.pop()

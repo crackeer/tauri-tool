@@ -28,7 +28,7 @@ class App extends React.Component {
             return <h3><Space>新建JSON</Space></h3>
         }
         if(this.state.file_type == common.FileTypeMarkdown) {
-            return <h3><Space>新建Markdown</Space></h3>
+            return <h3><Space>新建MD</Space></h3>
         }
         return 
     }
@@ -78,7 +78,7 @@ class App extends React.Component {
             }
             await invoke.writeFile(filePath, content)
             Message.info('保存成功')
-            window.location.href = "/file?file=" + filePath
+            window.location.href = "/file/view?file=" + filePath
         }
     }
 

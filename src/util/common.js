@@ -16,7 +16,7 @@ var getFileExtByType = (fileType) => {
     if(fileType === FileTypeMarkdown) {
         return "md"
     }
-    return FileTypeExtensionMapping[fileType] || 'txt'
+    return FileTypeExtensionMapping[fileType] || fileType
 }
 
 var sortFileList = (fileList) => {
