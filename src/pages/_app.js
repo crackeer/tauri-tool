@@ -2,7 +2,7 @@ import React from 'react';
 import '@/styles/globals.css'
 import "@arco-design/web-react/dist/css/arco.css";
 import { Layout, Menu, Affix } from '@arco-design/web-react';
-import { IconHome, IconCodeSquare, IconScan, IconSelectAll, IconSend } from '@arco-design/web-react/icon';
+import { IconHome, IconCodeSquare, IconScan, IconSelectAll, IconSend, IconHighlight } from '@arco-design/web-react/icon';
 import cache from '@/util/cache';
 const Sider = Layout.Sider;
 const MenuItem = Menu.Item;
@@ -10,9 +10,10 @@ const MenuItem = Menu.Item;
 const MenuList = [
     {'key' : 'main', 'icon' : <IconHome /> , 'href': '/', 'title': '主页'},
     {'key' : 'file', 'icon' : <IconCodeSquare /> , 'href': '/file', 'title': '文件'},
+    {'key' : 'nuc_system', 'icon' : <IconHighlight />, 'href': '/nuc/system', 'title': '主机'},
+    {'key' : 'nuc_project', 'icon' : <IconSelectAll />, 'href': '/nuc/project', 'title': '主机项目'},
+    {'key' : 'nuc_task', 'icon' : <IconSend />, 'href': '/nuc/task', 'title': '主机任务'},
     {'key' : 'nuc_tf', 'icon' : <IconScan />, 'href': '/nuc/tf', 'title': 'TF卡'},
-    {'key' : 'nuc_project', 'icon' : <IconSelectAll />, 'href': '/nuc/project', 'title': '项目'},
-    {'key' : 'nuc_task', 'icon' : <IconSend />, 'href': '/nuc/task', 'title': '任务'},
 ]
 
 function getMarginLeft(value) {

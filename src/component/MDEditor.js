@@ -46,7 +46,7 @@ const MDEditor = (props) => {
         for (var i in view) {
             list.push(view[i])
         }
-        let uploadConfig = await getUploadConfig(file)
+        let uploadConfig = await getUploadConfig(props.file)
         await uploadFile(uploadConfig.uploadDir, uploadConfig.fileName, list)
         return new Promise((resolve, _) => {
             resolve([{

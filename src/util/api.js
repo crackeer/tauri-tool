@@ -1,18 +1,23 @@
 import { fetch } from '@tauri-apps/api/http';
 import common from './common'
 import { Body } from "@tauri-apps/api/http"
+import dayjs from 'dayjs';
 const get = async (url, query) => {
     if (query != null) {
         url = url + '?' + common.httpBuildQuery(query)
     }
     try {
         let result = await fetch(url, {
-            method: 'GET'
+            method: 'GET',
         })
+        console.log("GET", url, result)
         return result.data    
     } catch(e) {
-        console.log(e.message)
-        return null
+        return {
+            "code" : -101,
+            "status" : e,
+            "data" : null,
+        }
     }
 }
 
@@ -20,15 +25,22 @@ const post = async (url, data) => {
     try {
         let result = await fetch(url, {
             method: 'POST',
+            timeout : 1,
             body : Body.json(data),
             headers : {
                 'Content-Type' : 'application/json'
             }
         })
+        console.log("POST", url, data, result)
         return result.data
     } catch(e) {
-        console.log(e.message)
-        return null
+        console.log(e)
+        return {
+            "code" : -101,
+            "status" : e,
+            "data" : null,
+        }
+
     }
    
 }
@@ -122,7 +134,6 @@ const getTFVRFileList = async () => {
     if(!result.data.Success) {
         return []
     }
-    console.log(result)
     return result.data.Result
 }
 
@@ -163,11 +174,21 @@ const getAccessToken = async (query) => {
     return result.data
 }
 
+const getNucSystemInfo = async () => {
+    let result = await get('http://10.11.1.3/__proxy__/calcnode/api_system_info')
+    return result
+}
+
+const setNucTime = async(ts) => {
+    let result = await get('http://10.11.1.3/__proxy__/calcnode/api_hardware_rtc_set?timestamp=' + ts)
+    return result
+}
+
 
 export default {
-    getTFState, getTFProjects, getTFImportLog, getTFVRFileList, queryVrapi, queryShepherd, decodeWorkCode, getAccessToken
+    getTFState, getTFProjects, getTFImportLog, getTFVRFileList, queryVrapi, queryShepherd, decodeWorkCode, getAccessToken, getNucSystemInfo, setNucTime
 }
 
 export {
-    getTFState, getTFProjects, getTFImportLog, getTFVRFileList, queryVrapi, queryShepherd, decodeWorkCode, getAccessToken
+    getTFState, getTFProjects, getTFImportLog, getTFVRFileList, queryVrapi, queryShepherd, decodeWorkCode, getAccessToken, getNucSystemInfo, setNucTime
 }

@@ -107,7 +107,7 @@ class App extends React.Component {
     }
     htmlTitle = () => {
         return <h3><Space>
-            项目 <Button onClick={this.getProjectList} size='mini' type='primary'>刷新</Button>
+            主机项目 <Button onClick={this.getProjectList} size='mini' type='primary'>刷新</Button>
         </Space></h3>
     }
 

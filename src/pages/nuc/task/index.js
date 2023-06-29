@@ -275,7 +275,7 @@ class App extends React.Component {
     }
     htmlTitle = () => {
         return <h3><Space>
-            任务<Button onClick={this.getTaskList} size='mini' type='primary'>刷新</Button>
+            主机任务<Button onClick={this.getTaskList} size='mini' type='primary'>刷新</Button>
         </Space></h3>
     }
 
