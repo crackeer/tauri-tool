@@ -21,7 +21,12 @@ pub struct Task {
 }
 
 lazy_static! {
-    pub static ref TASK_LIST: Arc<Mutex<Vec<Task>>> = Arc::new(Mutex::new(Vec::new()));
+    pub static ref TASK_LIST: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
+    pub static ref TASK_STATE: Arc<Mutex<HashMap<String, Task>>> = Arc::new(Mutex::new(HashMap::new()));
+}
+
+fn get_task() -> String {
+    return TASK_LIST.lock().unwrap().remove(0);
 }
 // Example code that deserializes and serializes the model.
 // extern crate serde;
@@ -266,6 +271,7 @@ fn download_work_from_task_list() {
     if TASK_LIST.lock().unwrap().len > 0 {
         return
     }
-    TASK_LIST.lock().unwrap().
+    TASK_LIST.lock().unwrap().push(TASK_LIST);
+    
 
 }
