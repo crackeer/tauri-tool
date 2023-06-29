@@ -2,7 +2,7 @@ import React from 'react';
 import '@/styles/globals.css'
 import "@arco-design/web-react/dist/css/arco.css";
 import { Layout, Menu, Affix } from '@arco-design/web-react';
-import { IconHome, IconCodeSquare, IconScan, IconSelectAll, IconSend, IconHighlight } from '@arco-design/web-react/icon';
+import { IconHome, IconCodeSquare, IconScan, IconSelectAll, IconSend, IconHighlight, IconCloudDownload } from '@arco-design/web-react/icon';
 import cache from '@/util/cache';
 const Sider = Layout.Sider;
 const MenuItem = Menu.Item;
@@ -14,6 +14,7 @@ const MenuList = [
     {'key' : 'nuc_project', 'icon' : <IconSelectAll />, 'href': '/nuc/project', 'title': '主机项目'},
     {'key' : 'nuc_task', 'icon' : <IconSend />, 'href': '/nuc/task', 'title': '主机任务'},
     {'key' : 'nuc_tf', 'icon' : <IconScan />, 'href': '/nuc/tf', 'title': 'TF卡'},
+    {'key' : 'work', 'icon' : <IconCloudDownload />, 'href': '/work', 'title': 'VR下载'},
 ]
 
 function getMarginLeft(value) {

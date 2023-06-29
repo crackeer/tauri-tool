@@ -90,11 +90,20 @@ var fileExists = async (filePath) => {
     return result
 }
 
+var downloadWork = async (dir, work_json) => {
+    let result = await invoke('exec_download_work', {
+        dir: dir,
+        workJson : work_json,
+    })
+    return result
+
+}
+
 
 export {
-    writeFile, readFile, readDir, simpleReadDir, setWindowTitle, uploadFile, createFile, createDir, deleteFile, deleteFolder, renameFile, fileExists
+    writeFile, readFile, readDir, simpleReadDir, setWindowTitle, uploadFile, createFile, createDir, deleteFile, deleteFolder, renameFile, fileExists, downloadWork
 }
 
 export default {
-    writeFile, readFile, readDir, simpleReadDir, setWindowTitle, uploadFile, createFile, createDir, deleteFile, deleteFolder, renameFile, fileExists
+    writeFile, readFile, readDir, simpleReadDir, setWindowTitle, uploadFile, createFile, createDir, deleteFile, deleteFolder, renameFile, fileExists, downloadWork
 }

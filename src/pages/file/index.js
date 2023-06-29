@@ -6,8 +6,6 @@ import invoke from '@/util/invoke'
 import common from '@/util/common'
 import { IconEdit, IconDelete, IconDown, IconLoading } from '@arco-design/web-react/icon';
 import { Card, Avatar, Link, Typography, Space, Row } from '@arco-design/web-react';
-import dayjs from 'dayjs';
-const TimelineItem = Timeline.Item;
 class App extends React.Component {
     constructor(props) {
         super(props);
