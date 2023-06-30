@@ -52,11 +52,10 @@ fn is_running() -> bool {
     return RUNNING.lock().unwrap().gt(&0);
 }
 
-fn set_running(flag : usize)  {
+fn set_running(flag: usize) {
     let mut running = RUNNING.lock().unwrap();
     *running = flag;
 }
-
 
 // Example code that deserializes and serializes the model.
 // extern crate serde;
@@ -215,7 +214,7 @@ impl Work {
     }
 }
 
-pub async fn download_work_to(work: &Work, path: &Path) -> Result<(), String> {
+pub async fn download_work_to(work: &Work, path: &Path, dir: String) -> Result<(), String> {
     let download: Vec<(String, String)> = work.get_download_list();
 
     for (index, item) in download.iter().enumerate() {
@@ -225,6 +224,14 @@ pub async fn download_work_to(work: &Work, path: &Path) -> Result<(), String> {
             index,
         )
         .await?;
+        update_task(
+            dir.clone(),
+            TaskState {
+                state: "running".to_string(),
+                percent: index + 1 / download.len(),
+                message: "".to_string(),
+            },
+        );
     }
     let work_json = work.get_jsonp_work();
     let mut file = File::create(path.join(&"work.js").to_str().unwrap()).unwrap();
@@ -336,12 +343,19 @@ pub async fn add_work_download_task(dir: String, work_json: String) -> TaskState
         };
     }
     add_task(dir.clone());
-    update_task(dir.clone(), TaskState { state: "waiting".to_string(), percent: 0, message: "waiting".to_string() });
+    update_task(
+        dir.clone(),
+        TaskState {
+            state: "waiting".to_string(),
+            percent: 0,
+            message: "waiting".to_string(),
+        },
+    );
 
     if !is_running() {
         tokio::spawn(download_work_from_task_list());
     }
-   
+
     return TaskState {
         message: "success".to_string(),
         state: "success".to_string(),
@@ -349,7 +363,7 @@ pub async fn add_work_download_task(dir: String, work_json: String) -> TaskState
     };
 }
 
-/* 
+/*
 #[tauri::command]
 pub async fn exec_download_work(dir: String, work_json: String) -> String {
     if let Err(err) = fs::create_dir_all(String::from(dir.clone())) {
@@ -391,10 +405,37 @@ async fn download_work_from_task_list() -> Result<String, String> {
         if work.is_err() {
             return Err(work.unwrap_err().to_string());
         }
-        update_task(dir.clone(), TaskState { state: "running".to_string(), percent: 10, message: "".to_string() });
-        match download_work_to(&work.unwrap(), Path::new(&dir).join("preview").as_path()).await {
-            Ok(_) =>  update_task(dir.clone(), TaskState { state: "success".to_string(), percent: 10, message: "".to_string() }),
-            Err(err) => update_task(dir.clone(), TaskState { state: "failure".to_string(), percent: 10, message: err.to_string() }),
+        update_task(
+            dir.clone(),
+            TaskState {
+                state: "running".to_string(),
+                percent: 10,
+                message: "".to_string(),
+            },
+        );
+        match download_work_to(
+            &work.unwrap(),
+            Path::new(&dir).join("preview").as_path(),
+            dir.clone(),
+        )
+        .await
+        {
+            Ok(_) => update_task(
+                dir.clone(),
+                TaskState {
+                    state: "success".to_string(),
+                    percent: 10,
+                    message: "".to_string(),
+                },
+            ),
+            Err(err) => update_task(
+                dir.clone(),
+                TaskState {
+                    state: "failure".to_string(),
+                    percent: 10,
+                    message: err.to_string(),
+                },
+            ),
         }
     }
     set_running(0);

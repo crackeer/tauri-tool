@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Table, Modal, List, Input, Message } from '@arco-design/web-react';
+import { Button, Table, Modal, List, Input, Message, Progress } from '@arco-design/web-react';
 import { open } from '@tauri-apps/api/dialog';
 import cache from '@/util/cache';
 import invoke from '@/util/invoke'
@@ -9,6 +9,7 @@ import { Card, Avatar, Link, Typography, Space, Row } from '@arco-design/web-rea
 import { open as ShellOpen } from '@tauri-apps/api/shell';
 
 class App extends React.Component {
+    timer = null
     constructor(props) {
         super(props);
         this.state = {
@@ -17,11 +18,12 @@ class App extends React.Component {
             workJSON: "",
             saveDir: "",
             files: [],
-            query: false,
+            runningTask: {},
         }
     }
     async componentDidMount() {
         this.getVRFiles()
+        this.queryTaskState()
     }
     getVRFiles = async () => {
         let files = await cache.getVRFiles()
@@ -66,27 +68,22 @@ class App extends React.Component {
     }
     addDownloadTask = async () => {
         let dir = this.state.saveDir + "/" + this.state.saveName
-        let data = await invoke.addDownloadWorkTask(this.state.saveDir + "/" + this.state.saveName, this.state.workJSON)
+        let data = await invoke.addDownloadWorkTask(dir, this.state.workJSON)
         if (data.state == "failure") {
             Message.error(data.message + dir)
             return
         }
         console.log(data);
         await cache.addVRFiles([dir])
-        this.getVRFiles()
-        //this.queryTaskState()
+        await this.getVRFiles()
     }
     queryTaskState = async () => {
-        if (this.state.query) {
-            return false
-        }
-        this.setState({
-            query: true
+        let data = await invoke.queryDownloadTask()
+        let tasks = Object.keys(data);
+        await this.setState({
+            runningTask: data,
         })
-        setInterval(async () => {
-            let data = await invoke.queryDownloadTask()
-            console.log(data)
-        }, 2000)
+        setTimeout(this.queryTaskState, 2000)
     }
     previewVR = async (file) => {
         await ShellOpen(file + '/preview/index.html')
@@ -98,7 +95,7 @@ class App extends React.Component {
                 <List dataSource={this.state.files} size={'small'} render={(item, index) => {
                     return <List.Item key={index} actions={[
                         <span className='list-demo-actions-icon' onClick={() => {
-                            this.deleteVRFiles(item);
+                            this.toDelete(item);
                         }}>
                             <IconDelete />
                         </span>
@@ -106,7 +103,9 @@ class App extends React.Component {
                         <List.Item.Meta
                             avatar={<Avatar shape='square'>VR</Avatar>}
                             title={<Link href={null} onClick={() => this.previewVR(item.file)}>{item.file}</Link>}
-                            description={item.time}
+                            description={this.state.runningTask[item.file] != undefined ? <>
+                                <TaskState data={this.state.runningTask[item.file]} />
+                            </> : null}
                         />
                     </List.Item>
                 }} />
@@ -131,6 +130,27 @@ class App extends React.Component {
             </div>
         )
     }
+}
+
+const TaskState = (props) => {
+    if(props.data.state == 'success') {
+        return <>下载成功</>
+    }
+    if(props.data.state == 'failure') {
+        return <>下载失败，{props.data.message}</>
+    }
+
+    if(props.data.state == 'running') {
+        if (props.data.percent > 0) {
+            return <>下载中<Progress percent={props.data.percent }  /></>
+        }
+        return <>下载中</> 
+    }
+
+    if(props.data.state == 'waiting') {
+        return <>等待下载</>
+    }
+    return <>{props.state}</>
 }
 
 export default App
