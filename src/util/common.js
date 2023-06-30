@@ -80,6 +80,7 @@ var detectFileType = (file) => {
     if (lodash.endsWith(file, '.go')) {
         return FileTypeGO;
     }
+    return "A"
 }
 
 function httpBuildQuery(query) {
