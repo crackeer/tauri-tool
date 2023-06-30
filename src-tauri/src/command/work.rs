@@ -79,19 +79,17 @@ pub struct Work {
     panorama: Panorama,
     picture_url: String,
     title_picture_url: String,
-    vr_code: String,
-    vr_type: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Initial {
-    flag_position: Vec<Option<serde_json::Value>>,
+    flag_position: Option<Vec<serde_json::Value>>,
     fov: i64,
     heading: i64,
     latitude: f64,
     longitude: f64,
-    pano: i64,
-    pano_index: i64,
+    pano: Option<i64>,
+    pano_index: Option<i64>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -99,7 +97,6 @@ pub struct Model {
     file_url: String,
     material_base_url: String,
     material_textures: Vec<String>,
-    modify_time: String,
     #[serde(rename = "type")]
     model_type: i64,
 }
@@ -325,23 +322,22 @@ pub async fn add_work_download_task(dir: String, work_json: String) -> TaskState
             percent: 0,
         };
     }
+    let data: Result<Work, serde_json::Error> =  serde_json::from_str(&work_json);
+    if data.is_err() {
+        return TaskState {
+            message: format!("json_decode_work error:{}", data.unwrap_err().to_string()),
+            state: "failure".to_string(),
+            percent: 0,
+        };
+    }
+
     let path = Path::new(&dir);
     fs::write(
         path.join(&"input.json").to_str().unwrap(),
         work_json.as_bytes(),
     );
 
-    let data: Option<Work> = match serde_json::from_str(&work_json) {
-        Ok(val) => Some(val),
-        _ => None,
-    };
-    if data.is_none() {
-        return TaskState {
-            message: String::from("json decode work_json error"),
-            state: "failure".to_string(),
-            percent: 0,
-        };
-    }
+   
     add_task(dir.clone());
     update_task(
         dir.clone(),

@@ -70,7 +70,7 @@ class App extends React.Component {
         let dir = this.state.saveDir + "/" + this.state.saveName
         let data = await invoke.addDownloadWorkTask(dir, this.state.workJSON)
         if (data.state == "failure") {
-            Message.error(data.message + dir)
+            Message.error(data.message)
             return
         }
         console.log(data);
