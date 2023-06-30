@@ -76,6 +76,11 @@ class App extends React.Component {
         console.log(data);
         await cache.addVRFiles([dir])
         await this.getVRFiles()
+        this.setState({
+            visible : false,
+            saveName : '',
+            workJSON : ''
+        })
     }
     queryTaskState = async () => {
         let data = await invoke.queryDownloadTask()
