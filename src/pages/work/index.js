@@ -1,11 +1,13 @@
 import React from 'react';
-import { Button, Table, Modal, List, Input } from '@arco-design/web-react';
+import { Button, Table, Modal, List, Input, Message } from '@arco-design/web-react';
 import { open } from '@tauri-apps/api/dialog';
 import cache from '@/util/cache';
 import invoke from '@/util/invoke'
 import common from '@/util/common'
 import { IconFolder, IconDelete, IconDown, IconLoading } from '@arco-design/web-react/icon';
 import { Card, Avatar, Link, Typography, Space, Row } from '@arco-design/web-react';
+import { open as ShellOpen } from '@tauri-apps/api/shell';
+
 class App extends React.Component {
     constructor(props) {
         super(props);
@@ -15,10 +17,19 @@ class App extends React.Component {
             workJSON: "",
             saveDir: "",
             files: [],
+            query: false,
         }
     }
     async componentDidMount() {
-
+        this.getVRFiles()
+    }
+    getVRFiles = async () => {
+        let files = await cache.getVRFiles()
+        let dir = await cache.getVRDir()
+        this.setState({
+            files: files,
+            saveDir: dir,
+        })
     }
     htmlTitle = () => {
         return <h3><Space>
@@ -43,37 +54,75 @@ class App extends React.Component {
         if (selected == null) {
             return
         }
-        this.setState({
-            saveDir: selected
-        })
+        await cache.setVRDir(selected)
+        this.getVRFiles()
     }
 
     toDelete = async (item) => {
-        let list = await cache.deleteOpenFiles([item.file])
+        let list = await cache.deleteVRFiles([item.file])
         this.setState({
             files: list
         })
     }
-    execDownload = async() => {
-        let data = await invoke.downloadWork(this.state.saveDir + "/" + this.state.saveName, this.state.workJSON)
+    addDownloadTask = async () => {
+        let dir = this.state.saveDir + "/" + this.state.saveName
+        let data = await invoke.addDownloadWorkTask(this.state.saveDir + "/" + this.state.saveName, this.state.workJSON)
+        if (data.state == "failure") {
+            Message.error(data.message + dir)
+            return
+        }
+        console.log(data);
+        await cache.addVRFiles([dir])
+        this.getVRFiles()
+        //this.queryTaskState()
+    }
+    queryTaskState = async () => {
+        if (this.state.query) {
+            return false
+        }
+        this.setState({
+            query: true
+        })
+        setInterval(async () => {
+            let data = await invoke.queryDownloadTask()
+            console.log(data)
+        }, 2000)
+    }
+    previewVR = async (file) => {
+        await ShellOpen(file + '/preview/index.html')
     }
 
     render() {
         return (
             <div class="app" style={{ margin: '10px auto', width: '88%' }}>
+                <List dataSource={this.state.files} size={'small'} render={(item, index) => {
+                    return <List.Item key={index} actions={[
+                        <span className='list-demo-actions-icon' onClick={() => {
+                            this.deleteVRFiles(item);
+                        }}>
+                            <IconDelete />
+                        </span>
+                    ]} >
+                        <List.Item.Meta
+                            avatar={<Avatar shape='square'>VR</Avatar>}
+                            title={<Link href={null} onClick={() => this.previewVR(item.file)}>{item.file}</Link>}
+                            description={item.time}
+                        />
+                    </List.Item>
+                }} />
                 <Modal
                     title='新建下载VR任务'
                     visible={this.state.visible}
                     onCancel={() => {
                         this.setState({ visible: false })
                     }}
-                    style={{width:'70%'}}
-                    onOk={this.execDownload}
+                    style={{ width: '70%' }}
+                    onOk={this.addDownloadTask}
                 >
                     <p>下载目录:</p>
                     <Input.Search value={this.state.saveDir} onChange={(val) => { this.setState({ saveDir: val }) }} searchButton={
-                    "选择目录"
-                }  defaultValue={this.state.saveDir} placeholder='请选择目录' onSearch={this.selectDirectory}/>
+                        "选择目录"
+                    } defaultValue={this.state.saveDir} placeholder='请选择目录' onSearch={this.selectDirectory} />
                     <p>名称:</p>
                     <Input value={this.state.saveName} onChange={(val) => { this.setState({ saveName: val }) }} />
                     <p>WorkJSON:</p>
@@ -82,24 +131,6 @@ class App extends React.Component {
             </div>
         )
     }
-}
-
-const Files = (props) => {
-    return <List dataSource={props.data} size={'small'} render={(item, index) => {
-        return <List.Item key={index} actions={[
-            <span className='list-demo-actions-icon' onClick={() => {
-                props.deleteFn(item);
-            }}>
-                <IconDelete />
-            </span>
-        ]} >
-            <List.Item.Meta
-                avatar={<Avatar shape='square' style={{ backgroundColor: item.color }}>{item.file_type}</Avatar>}
-                title={<Link href={'/file/view?file=' + item.file}>{item.file}</Link>}
-                description={item.time}
-            />
-        </List.Item>
-    }} header={<strong>{props.title}</strong>} />
 }
 
 export default App

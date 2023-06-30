@@ -5,6 +5,9 @@ import { add } from 'lodash';
 const MenuCollapsed = "MenuCollapsed";
 const OpenFiles = "OpenFiles";
 
+const VRDir = "VRDir"
+const VRFiles = "VRFiles"
+
 var get = async (key) => {
     try {
         let value =  await readTextFile(key, { dir: BaseDirectory.Cache });
@@ -28,7 +31,7 @@ var getMenuCollapsed = async () => {
 }
 
 var setMenuCollapsed = async (value) => {
-    return set(MenuCollapsed, value +'')
+    return await set(MenuCollapsed, value +'')
 }
 
 
@@ -40,9 +43,7 @@ var getOpenFiles = async () => {
     return JSON.parse(value)
 }
 
-var addOpenFiles = async (addFiles) => {
-    let files = await getOpenFiles()
-    
+var addFiles = (files, addFiles) => {
     files = files.filter(item => {
         return addFiles.indexOf(item.file) < 0
     })
@@ -55,6 +56,12 @@ var addOpenFiles = async (addFiles) => {
             'time' : time,
         })
     }
+    return files
+}
+
+var addOpenFiles = async (add) => {
+    let files = await getOpenFiles()
+    files = addFiles(files, add)
     await set(OpenFiles, JSON.stringify(files))
     return files
 }
@@ -67,10 +74,47 @@ var deleteOpenFiles = async (addFiles) => {
     await set(OpenFiles, JSON.stringify(files))
     return files
 }
+
+var getVRDir = async () => {
+    return await get(VRDir)
+}
+
+var setVRDir = async (dir) => {
+    await set(VRDir, dir +'')
+}
+
+var getVRFiles = async () => {
+    let value = await get(VRFiles)
+    if(value.length < 1) {
+        return []
+    }
+    return JSON.parse(value)
+}
+
+var addVRFiles = async (add) => {
+    let files = await getVRFiles()
+    files = addFiles(files, add)
+    await set(VRFiles, JSON.stringify(files))
+    return files
+}
+
+var deleteVRFiles = async (add) => {
+    let files = await getVRFiles()
+    files = files.filter(item => {
+        return add.indexOf(item.file) < 0
+    })
+    await set(VRFiles, JSON.stringify(files))
+    return files
+}
 export default {
     getMenuCollapsed,
     setMenuCollapsed, 
     getOpenFiles,
     addOpenFiles,
     deleteOpenFiles,
+    getVRDir,
+    setVRDir,
+    getVRFiles,
+    addVRFiles,
+    deleteVRFiles
 }

@@ -1,33 +1,63 @@
+use base64::{engine::general_purpose, Engine as _};
 use reqwest;
-use std::fs::{File, self};
+use rust_embed::RustEmbed;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::fs::{self, File};
 use std::io::Write;
 use std::path::Path;
-use base64::{Engine as _, engine::general_purpose};
-use rust_embed::{RustEmbed};
-use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
-use std::collections::HashMap;
+use tokio;
 
 #[derive(RustEmbed)]
 #[folder = "static/"]
 struct Asset;
 
-
-pub struct Task {
-    dir: String,
-    state : String,
+#[warn(dead_code)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct TaskState {
+    state: String,
     percent: usize,
     message: String,
 }
 
 lazy_static! {
     pub static ref TASK_LIST: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
-    pub static ref TASK_STATE: Arc<Mutex<HashMap<String, Task>>> = Arc::new(Mutex::new(HashMap::new()));
+    pub static ref TASK_STATE: Arc<Mutex<HashMap<String, TaskState>>> =
+        Arc::new(Mutex::new(HashMap::new()));
+    pub static ref RUNNING: Arc<Mutex<usize>> = Arc::new(Mutex::new(0));
 }
 
-fn get_task() -> String {
-    return TASK_LIST.lock().unwrap().remove(0);
+fn get_task() -> Option<String> {
+    let mut list = TASK_LIST.lock().unwrap();
+    if list.len() < 1 {
+        return None;
+    }
+    return Some(list.remove(0));
 }
+
+fn add_task(dir: String) {
+    TASK_LIST.lock().unwrap().push(dir)
+}
+
+fn update_task(task_name: String, task_state: TaskState) {
+    TASK_STATE.lock().unwrap().insert(task_name, task_state);
+}
+
+fn get_task_state() -> HashMap<String, TaskState> {
+    TASK_STATE.lock().unwrap().clone()
+}
+
+fn is_running() -> bool {
+    return RUNNING.lock().unwrap().gt(&0);
+}
+
+fn set_running(flag : usize)  {
+    let mut running = RUNNING.lock().unwrap();
+    *running = flag;
+}
+
+
 // Example code that deserializes and serializes the model.
 // extern crate serde;
 // #[macro_use]
@@ -40,7 +70,6 @@ fn get_task() -> String {
 //     let json = r#"{"answer": 42}"#;
 //     let model: Welcome = serde_json::from_str(&json).unwrap();
 // }
-
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Work {
@@ -129,7 +158,10 @@ impl Work {
     fn get_download_list(&self) -> Vec<(String, String)> {
         let mut download: Vec<(String, String)> = Vec::new();
         download.push((self.picture_url.clone(), String::from("picture.jpg")));
-        download.push((self.title_picture_url.clone(), String::from("title_picture.jpg")));
+        download.push((
+            self.title_picture_url.clone(),
+            String::from("title_picture.jpg"),
+        ));
         for item in self.panorama.list.iter() {
             download.push((self.with_base_url(&item.right), item.right.clone()));
             download.push((self.with_base_url(&item.left), item.left.clone()));
@@ -138,50 +170,63 @@ impl Work {
             download.push((self.with_base_url(&item.up), item.up.clone()));
             download.push((self.with_base_url(&item.down), item.down.clone()));
         }
-        download.push((self.with_base_url(&self.model.file_url), self.model.file_url.clone()));
+        download.push((
+            self.with_base_url(&self.model.file_url),
+            self.model.file_url.clone(),
+        ));
         for item in self.model.material_textures.iter() {
-            download.push((self.with_base_url(&self.with_model_base_url(&item)), self.with_model_base_url(&item)))
+            download.push((
+                self.with_base_url(&self.with_model_base_url(&item)),
+                self.with_model_base_url(&item),
+            ))
         }
         return download;
     }
     fn get_jsonp_work(&self) -> String {
         let mut work = self.clone();
-        let mut index :usize  = 0;
+        let mut index: usize = 0;
         work.picture_url = format!("picture.jpg.{}.jsonp", index);
         index = index + 1;
-        work.title_picture_url =  format!("title_picture.jpg.{}.jsonp", index);
+        work.title_picture_url = format!("title_picture.jpg.{}.jsonp", index);
         for x in 0..self.panorama.list.len() {
             index = index + 1;
-            work.panorama.list[x].right = format!("{}.{}.jsonp",  work.panorama.list[x].right , index);
+            work.panorama.list[x].right =
+                format!("{}.{}.jsonp", work.panorama.list[x].right, index);
             index = index + 1;
-            work.panorama.list[x].left = format!("{}.{}.jsonp",  work.panorama.list[x].left , index);
+            work.panorama.list[x].left = format!("{}.{}.jsonp", work.panorama.list[x].left, index);
             index = index + 1;
-            work.panorama.list[x].front = format!("{}.{}.jsonp",  work.panorama.list[x].front , index);
+            work.panorama.list[x].front =
+                format!("{}.{}.jsonp", work.panorama.list[x].front, index);
             index = index + 1;
-            work.panorama.list[x].back = format!("{}.{}.jsonp",  work.panorama.list[x].back , index);
+            work.panorama.list[x].back = format!("{}.{}.jsonp", work.panorama.list[x].back, index);
             index = index + 1;
-            work.panorama.list[x].up = format!("{}.{}.jsonp",  work.panorama.list[x].up , index);
+            work.panorama.list[x].up = format!("{}.{}.jsonp", work.panorama.list[x].up, index);
             index = index + 1;
-            work.panorama.list[x].down = format!("{}.{}.jsonp",  work.panorama.list[x].down , index);
+            work.panorama.list[x].down = format!("{}.{}.jsonp", work.panorama.list[x].down, index);
         }
         index = index + 1;
         work.model.file_url = format!("{}.{}.jsonp", work.model.file_url, index);
         for x in 0..work.model.material_textures.len() {
-            index = index+1;
-            work.model.material_textures[x] = format!("{}.{}.jsonp", work.model.material_textures[x], index);
+            index = index + 1;
+            work.model.material_textures[x] =
+                format!("{}.{}.jsonp", work.model.material_textures[x], index);
         }
         serde_json::to_string(&work).unwrap()
     }
 }
 
-
 pub async fn download_work_to(work: &Work, path: &Path) -> Result<(), String> {
     let download: Vec<(String, String)> = work.get_download_list();
 
     for (index, item) in download.iter().enumerate() {
-        download_file(item.0.clone(), path.join(item.1.clone()).to_str().unwrap(), index).await?;
+        download_file(
+            item.0.clone(),
+            path.join(item.1.clone()).to_str().unwrap(),
+            index,
+        )
+        .await?;
     }
-    let work_json =  work.get_jsonp_work();
+    let work_json = work.get_jsonp_work();
     let mut file = File::create(path.join(&"work.js").to_str().unwrap()).unwrap();
     if let Err(err) = file.write_all("var workJSON = ".as_bytes()) {
         return Err(err.to_string());
@@ -192,14 +237,18 @@ pub async fn download_work_to(work: &Work, path: &Path) -> Result<(), String> {
     for f in Asset::iter() {
         let a = Asset::get(f.as_ref()).unwrap();
         if let Err(err) = fs::write(path.join(f.as_ref()), a.data.as_ref()) {
-            return Err(format!("write static file `{}` error: {}", f.as_ref(), err.to_string()));
+            return Err(format!(
+                "write static file `{}` error: {}",
+                f.as_ref(),
+                err.to_string()
+            ));
         }
     }
 
     Ok(())
 }
 
-async fn download_file(url: String, dest: &str, index : usize) -> Result<(), String> {
+async fn download_file(url: String, dest: &str, index: usize) -> Result<(), String> {
     //let resp = reqwest::blocking::get(url);
     let client = reqwest::Client::new();
     let builder = client.get(url);
@@ -233,29 +282,86 @@ async fn download_file(url: String, dest: &str, index : usize) -> Result<(), Str
     Ok(())
 }
 
-
 const IMAGE_JPEG: &str = "image/jpeg";
 const IMAGE_JPG: &str = "image/jpg";
-const IMAGE_PNG : &str = "image/png";
+const IMAGE_PNG: &str = "image/png";
 
-fn generate_jsonp_content(content_type: &str, input : &[u8], hash_code : usize) -> String {
+fn generate_jsonp_content(content_type: &str, input: &[u8], hash_code: usize) -> String {
     match content_type {
-        IMAGE_JPEG | IMAGE_JPG => format!("window[\"jsonp_{}\"] && window[\"jsonp_{}\"](\"data:image/jpeg;base64,{}\")", hash_code, hash_code, general_purpose::STANDARD.encode(input)),
-        IMAGE_PNG => format!("window[\"jsonp_{}\"] && window[\"jsonp_{}\"](\"data:image/png;base64,{}\")", hash_code, hash_code, general_purpose::STANDARD.encode(input)),
-        _ => format!("window['jsonp_{}'] && window['jsonp_{}'](\"data:application/octet-stream;base64,{}\")", hash_code, hash_code, general_purpose::STANDARD.encode(input)),
+        IMAGE_JPEG | IMAGE_JPG => format!(
+            "window[\"jsonp_{}\"] && window[\"jsonp_{}\"](\"data:image/jpeg;base64,{}\")",
+            hash_code,
+            hash_code,
+            general_purpose::STANDARD.encode(input)
+        ),
+        IMAGE_PNG => format!(
+            "window[\"jsonp_{}\"] && window[\"jsonp_{}\"](\"data:image/png;base64,{}\")",
+            hash_code,
+            hash_code,
+            general_purpose::STANDARD.encode(input)
+        ),
+        _ => format!(
+            "window['jsonp_{}'] && window['jsonp_{}'](\"data:application/octet-stream;base64,{}\")",
+            hash_code,
+            hash_code,
+            general_purpose::STANDARD.encode(input)
+        ),
     }
 }
 
-
 #[tauri::command]
-pub async fn exec_download_work(dir: String, work_json: String) -> String { 
+pub async fn add_work_download_task(dir: String, work_json: String) -> TaskState {
+    if let Err(err) = fs::create_dir_all(String::from(dir.clone())) {
+        return TaskState {
+            message: err.to_string(),
+            state: "failure".to_string(),
+            percent: 0,
+        };
+    }
+    let path = Path::new(&dir);
+    fs::write(
+        path.join(&"input.json").to_str().unwrap(),
+        work_json.as_bytes(),
+    );
+
+    let data: Option<Work> = match serde_json::from_str(&work_json) {
+        Ok(val) => Some(val),
+        _ => None,
+    };
+    if data.is_none() {
+        return TaskState {
+            message: String::from("json decode work_json error"),
+            state: "failure".to_string(),
+            percent: 0,
+        };
+    }
+    add_task(dir.clone());
+    update_task(dir.clone(), TaskState { state: "waiting".to_string(), percent: 0, message: "waiting".to_string() });
+
+    if !is_running() {
+        tokio::spawn(download_work_from_task_list());
+    }
+   
+    return TaskState {
+        message: "success".to_string(),
+        state: "success".to_string(),
+        percent: 0,
+    };
+}
+
+/* 
+#[tauri::command]
+pub async fn exec_download_work(dir: String, work_json: String) -> String {
     if let Err(err) = fs::create_dir_all(String::from(dir.clone())) {
         return String::from(err.to_string());
     }
     let path = Path::new(&dir);
-    fs::write(path.join(&"input.json").to_str().unwrap(), work_json.as_bytes());
+    fs::write(
+        path.join(&"input.json").to_str().unwrap(),
+        work_json.as_bytes(),
+    );
 
-    let data : Option<Work> = match serde_json::from_str(&work_json) {
+    let data: Option<Work> = match serde_json::from_str(&work_json) {
         Ok(val) => Some(val),
         _ => None,
     };
@@ -265,13 +371,37 @@ pub async fn exec_download_work(dir: String, work_json: String) -> String {
     download_work_to(&data.unwrap(), path.join("preview").as_path()).await;
     String::from("ok")
 }
+*/
 
+fn read_work(dir: String) -> Result<Work, serde_json::Error> {
+    let buffer = File::open(Path::new(&dir).join(&"input.json").to_str().unwrap()).unwrap();
+    serde_json::from_reader(buffer)
+}
 
-fn download_work_from_task_list() {
-    if TASK_LIST.lock().unwrap().len > 0 {
-        return
+async fn download_work_from_task_list() -> Result<String, String> {
+    set_running(1);
+    loop {
+        let task_result = get_task();
+        if task_result.is_none() {
+            break;
+        }
+        let dir = task_result.unwrap();
+        println!("get task dir = {}", dir);
+        let work = read_work(dir.clone());
+        if work.is_err() {
+            return Err(work.unwrap_err().to_string());
+        }
+        update_task(dir.clone(), TaskState { state: "running".to_string(), percent: 10, message: "".to_string() });
+        match download_work_to(&work.unwrap(), Path::new(&dir).join("preview").as_path()).await {
+            Ok(_) =>  update_task(dir.clone(), TaskState { state: "success".to_string(), percent: 10, message: "".to_string() }),
+            Err(err) => update_task(dir.clone(), TaskState { state: "failure".to_string(), percent: 10, message: err.to_string() }),
+        }
     }
-    TASK_LIST.lock().unwrap().push(TASK_LIST);
-    
+    set_running(0);
+    Ok("Ok".to_string())
+}
 
+#[tauri::command]
+pub async fn query_all_task_state() -> HashMap<String, TaskState> {
+    get_task_state()
 }

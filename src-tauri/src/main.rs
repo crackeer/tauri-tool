@@ -12,7 +12,7 @@ use command::file::{
     simple_read_dir, write_file, write_media_file, file_exists
 };
 use command::work::{
-    exec_download_work
+    add_work_download_task, query_all_task_state
 };
 use tauri::{CustomMenuItem, Menu, MenuItem, Submenu};
 use tauri::{Window, WindowMenuEvent};
@@ -44,7 +44,8 @@ fn main() {
             delete_folder,
             rename_file,
             file_exists,
-            exec_download_work
+            add_work_download_task,
+            query_all_task_state,
         ])
         .menu(menu)
         .on_menu_event(window_menu_event)
