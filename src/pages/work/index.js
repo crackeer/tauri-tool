@@ -4,7 +4,7 @@ import { open } from '@tauri-apps/api/dialog';
 import cache from '@/util/cache';
 import invoke from '@/util/invoke'
 import common from '@/util/common'
-import { IconFolder, IconDelete, IconDown, IconLoading } from '@arco-design/web-react/icon';
+import { IconFolder, IconDelete, IconLoading } from '@arco-design/web-react/icon';
 import { Card, Avatar, Link, Typography, Space, Row } from '@arco-design/web-react';
 import { open as ShellOpen } from '@tauri-apps/api/shell';
 
@@ -66,7 +66,22 @@ class App extends React.Component {
             files: list
         })
     }
+    openVRDir = async (item) => {
+        await ShellOpen(item.file)
+    }
     addDownloadTask = async () => {
+        if(this.state.saveDir.length < 1) {
+            Message.error('Please select download directory')
+            return
+        }
+        if(this.state.saveName.length < 1) {
+            Message.error('Please input download name')
+            return
+        }
+        if (this.state.workJSON.length < 1) {
+            Message.error('Please input work JSON')
+            return
+        }
         let dir = this.state.saveDir + "/" + this.state.saveName
         let data = await invoke.addDownloadWorkTask(dir, this.state.workJSON)
         if (data.state == "failure") {
@@ -100,14 +115,19 @@ class App extends React.Component {
                 <List dataSource={this.state.files} size={'small'} render={(item, index) => {
                     return <List.Item key={index} actions={[
                         <span className='list-demo-actions-icon' onClick={() => {
+                            this.previewVR(item.file);
+                        }}>
+                           VR预览
+                        </span>,
+                        <span className='list-demo-actions-icon' onClick={() => {
                             this.toDelete(item);
                         }}>
-                            <IconDelete />
+                            删除记录
                         </span>
                     ]} >
                         <List.Item.Meta
                             avatar={<Avatar shape='square'>VR</Avatar>}
-                            title={<Link href={null} onClick={() => this.previewVR(item.file)}>{item.file}</Link>}
+                            title={<Link href={null} onClick={() => this.openVRDir(item)}>{item.file}</Link>}
                             description={this.state.runningTask[item.file] != undefined ? <>
                                 <TaskState data={this.state.runningTask[item.file]} />
                             </> : null}
@@ -120,7 +140,7 @@ class App extends React.Component {
                     onCancel={() => {
                         this.setState({ visible: false })
                     }}
-                    style={{ width: '70%' }}
+                    style={{ width: '55%' }}
                     onOk={this.addDownloadTask}
                 >
                     <p>下载目录:</p>
