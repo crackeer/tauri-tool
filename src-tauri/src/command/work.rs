@@ -28,6 +28,13 @@ lazy_static! {
     pub static ref RUNNING: Arc<Mutex<usize>> = Arc::new(Mutex::new(0));
 }
 
+const IMAGE_JPEG: &str = "image/jpeg";
+const IMAGE_JPG: &str = "image/jpg";
+const IMAGE_PNG: &str = "image/png";
+
+const PREVIEW_DIR: &str = "preview";
+const ORIGIN_DIR: &str = "origin";
+
 fn get_task() -> Option<String> {
     let mut list = TASK_LIST.lock().unwrap();
     if list.len() < 1 {
@@ -181,43 +188,44 @@ impl Work {
     fn get_jsonp_work(&self) -> String {
         let mut work = self.clone();
         let mut index: usize = 0;
-        work.picture_url = format!("picture.jpg.{}.jsonp", index);
+        work.picture_url = with_jsonp_suffix("picture.jpg", index);
         index = index + 1;
-        work.title_picture_url = format!("title_picture.jpg.{}.jsonp", index);
+        work.title_picture_url = with_jsonp_suffix("title_picture.jpg", index);
         for x in 0..self.panorama.list.len() {
             index = index + 1;
-            work.panorama.list[x].right =
-                format!("{}.{}.jsonp", work.panorama.list[x].right, index);
+            work.panorama.list[x].right = with_jsonp_suffix(&work.panorama.list[x].right, index);
             index = index + 1;
-            work.panorama.list[x].left = format!("{}.{}.jsonp", work.panorama.list[x].left, index);
+            work.panorama.list[x].left = with_jsonp_suffix(&work.panorama.list[x].left, index);
             index = index + 1;
-            work.panorama.list[x].front =
-                format!("{}.{}.jsonp", work.panorama.list[x].front, index);
+            work.panorama.list[x].front = with_jsonp_suffix(&work.panorama.list[x].front, index);
             index = index + 1;
-            work.panorama.list[x].back = format!("{}.{}.jsonp", work.panorama.list[x].back, index);
+            work.panorama.list[x].back = with_jsonp_suffix(&work.panorama.list[x].back, index);
             index = index + 1;
-            work.panorama.list[x].up = format!("{}.{}.jsonp", work.panorama.list[x].up, index);
+            work.panorama.list[x].up = with_jsonp_suffix(&work.panorama.list[x].up, index);
             index = index + 1;
-            work.panorama.list[x].down = format!("{}.{}.jsonp", work.panorama.list[x].down, index);
+            work.panorama.list[x].down = with_jsonp_suffix(&work.panorama.list[x].down, index);
         }
         index = index + 1;
-        work.model.file_url = format!("{}.{}.jsonp", work.model.file_url, index);
+        work.model.file_url = with_jsonp_suffix(&work.model.file_url, index);
         for x in 0..work.model.material_textures.len() {
             index = index + 1;
             work.model.material_textures[x] =
-                format!("{}.{}.jsonp", work.model.material_textures[x], index);
+                with_jsonp_suffix(&work.model.material_textures[x], index);
         }
         serde_json::to_string(&work).unwrap()
     }
 }
 
-pub async fn download_work_to(work: &Work, path: &Path, dir: String) -> Result<(), String> {
+pub async fn download_work_to(work: &Work, dir: String) -> Result<(), String> {
     let download: Vec<(String, String)> = work.get_download_list();
-
+    let path = Path::new(&dir);
+    let preview_path = path.join(PREVIEW_DIR);
+    let origin_path = path.join(ORIGIN_DIR);
     for (index, item) in download.iter().enumerate() {
         download_file(
             item.0.clone(),
-            path.join(item.1.clone()).to_str().unwrap(),
+            origin_path.join(item.1.clone()).to_str().unwrap(),
+            &with_jsonp_suffix(preview_path.join(item.1.clone()).to_str().unwrap(), index),
             index,
         )
         .await?;
@@ -231,16 +239,27 @@ pub async fn download_work_to(work: &Work, path: &Path, dir: String) -> Result<(
         );
     }
     let work_json = work.get_jsonp_work();
-    let mut file = File::create(path.join(&"work.js").to_str().unwrap()).unwrap();
-    if let Err(err) = file.write_all("var workJSON = ".as_bytes()) {
-        return Err(err.to_string());
+    let work_json_content = format!("var workJSON = {}", work_json);
+
+    // write work.js to preview directory
+    if let Err(err) = fs::write(
+        preview_path.join(&"work.js").to_str().unwrap(),
+        work_json_content.as_bytes(),
+    ) {
+        return Err(format!("write work.js error {}", err.to_string()));
     }
-    if let Err(err) = file.write_all(work_json.as_bytes()) {
-        return Err(err.to_string());
+    // write work.json to original directory
+    if let Err(err) = fs::write(
+        origin_path.join(&"work.json").to_str().unwrap(),
+        work_json.as_bytes(),
+    ) {
+        return Err(format!("write work.json error {}", err.to_string()));
     }
+
+    // write some static js and html files to preview directory
     for f in Asset::iter() {
         let a = Asset::get(f.as_ref()).unwrap();
-        if let Err(err) = fs::write(path.join(f.as_ref()), a.data.as_ref()) {
+        if let Err(err) = fs::write(preview_path.join(f.as_ref()), a.data.as_ref()) {
             return Err(format!(
                 "write static file `{}` error: {}",
                 f.as_ref(),
@@ -252,7 +271,39 @@ pub async fn download_work_to(work: &Work, path: &Path, dir: String) -> Result<(
     Ok(())
 }
 
-async fn download_file(url: String, dest: &str, index: usize) -> Result<(), String> {
+fn with_jsonp_suffix(file_name: &str, hash_code: usize) -> String {
+    return format!("{}.{}.jsonp", file_name, hash_code);
+}
+
+fn create_file_directory(dest: &str) -> Result<(), String> {
+    let path: &Path = Path::new(dest);
+    if let Err(err) = std::fs::create_dir_all(path.parent().unwrap()) {
+        return Err(err.to_string());
+    }
+    return Ok(());
+}
+
+async fn download_file(
+    url: String,
+    dest: &str,
+    jsonp_dest: &str,
+    jsonp_hash_code: usize,
+) -> Result<(), String> {
+    if let Err(err) = create_file_directory(dest) {
+        return Err(format!(
+            "create file directory `{}` failed: {}",
+            dest,
+            err.as_str()
+        ));
+    }
+    if let Err(err) = create_file_directory(jsonp_dest) {
+        return Err(format!(
+            "create file directory `{}` failed: {}",
+            jsonp_dest,
+            err.as_str()
+        ));
+    }
+
     //let resp = reqwest::blocking::get(url);
     let client = reqwest::Client::new();
     let builder = client.get(url);
@@ -262,33 +313,23 @@ async fn download_file(url: String, dest: &str, index: usize) -> Result<(), Stri
         return Err(err.to_string());
     }
     let response = result.unwrap();
-    let path: &Path = Path::new(dest);
-    if let Err(err) = std::fs::create_dir_all(path.parent().unwrap()) {
-        return Err(err.to_string());
-    }
-    let mut real_dest = String::from(dest);
-    real_dest.push_str(&format!(".{}.jsonp", index));
-    let res = File::create(real_dest);
-    if res.is_err() {
-        return Ok(());
-    }
-    let mut buffer = res.unwrap();
     let mut content_type = "";
     let header = response.headers().clone();
     if let Some(val) = header.get("Content-Type") {
         content_type = val.to_str().unwrap();
     }
     let bytes = response.bytes().await;
-    let base64_data = generate_jsonp_content(&content_type, &bytes.unwrap().to_vec(), index);
-    if let Err(err) = buffer.write_all(&base64_data.as_bytes()) {
+    let content = bytes.unwrap().as_ref().clone().to_vec();
+    let base64_data =
+        generate_jsonp_content(&content_type, &content, jsonp_hash_code);
+    if let Err(err) = fs::write(dest, &content) {
+        return Err(err.to_string());
+    }
+    if let Err(err) = fs::write(jsonp_dest, &base64_data.as_bytes()) {
         return Err(err.to_string());
     }
     Ok(())
 }
-
-const IMAGE_JPEG: &str = "image/jpeg";
-const IMAGE_JPG: &str = "image/jpg";
-const IMAGE_PNG: &str = "image/png";
 
 fn generate_jsonp_content(content_type: &str, input: &[u8], hash_code: usize) -> String {
     match content_type {
@@ -322,7 +363,7 @@ pub async fn add_work_download_task(dir: String, work_json: String) -> TaskState
             percent: 0,
         };
     }
-    let data: Result<Work, serde_json::Error> =  serde_json::from_str(&work_json);
+    let data: Result<Work, serde_json::Error> = serde_json::from_str(&work_json);
     if data.is_err() {
         return TaskState {
             message: format!("json_decode_work error:{}", data.unwrap_err().to_string()),
@@ -332,12 +373,17 @@ pub async fn add_work_download_task(dir: String, work_json: String) -> TaskState
     }
 
     let path = Path::new(&dir);
-    fs::write(
+    if let Err(err) = fs::write(
         path.join(&"input.json").to_str().unwrap(),
         work_json.as_bytes(),
-    );
+    ) {
+        return TaskState {
+            message: format!("write work input.json error:{}", err.to_string()),
+            state: "failure".to_string(),
+            percent: 0,
+        };
+    }
 
-   
     add_task(dir.clone());
     update_task(
         dir.clone(),
@@ -409,13 +455,7 @@ async fn download_work_from_task_list() -> Result<String, String> {
                 message: "".to_string(),
             },
         );
-        match download_work_to(
-            &work.unwrap(),
-            Path::new(&dir).join("preview").as_path(),
-            dir.clone(),
-        )
-        .await
-        {
+        match download_work_to(&work.unwrap(), dir.clone()).await {
             Ok(_) => update_task(
                 dir.clone(),
                 TaskState {
