@@ -128,7 +128,7 @@ class App extends React.Component {
                 </div>
             }
             return <div style={{ height: this.state.viewHeight, overflow: 'scroll', position: 'relative' }} onKeyUp={this.handleKeyUp} tabIndex="-1">
-                <MDEditor value={this.state.value} file={this.state.activeFile}  onChangeText={this.changeText} />
+                <MDEditor value={this.state.value} file={this.state.activeFile} onChangeText={this.changeText} />
             </div>
         }
         if (this.state.file_type == 'json') {
@@ -143,17 +143,19 @@ class App extends React.Component {
                 }} json={this.state.value} onChangeText={this.changeJSON} />
             </div>
         }
-        return <MonacoEditor
-            width={'100%'}
-            height={this.state.viewHeight}
-            language={this.state.file_type}
-            theme="vs-dark"
-            value={this.state.value}
-            options={{
-                selectOnLineNumbers: true
-            }}
-            onChange={console.log}
-        />
+        return <div onKeyUp={this.handleKeyUp} tabIndex="-1">
+            <MonacoEditor
+                width={'100%'}
+                height={this.state.viewHeight}
+                language={this.state.file_type}
+                theme="vs-dark"
+                value={this.state.value}
+                options={{
+                    selectOnLineNumbers: true,
+                    readOnly: this.state.mode === 'view',
+                }}
+                onChange={this.changeText}
+            /></div>
     }
 }
 

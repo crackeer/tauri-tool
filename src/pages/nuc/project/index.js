@@ -227,7 +227,7 @@ const WorkInfo = (props) => {
     }
     return <>
         <h3>VR信息 {
-            props.data.cube_size > 0 ? <Button onClick={preview} size='small' type='primary'>预览</Button> : null
+            props.data.cube_size > 0 ? <Button onClick={preview} size='mini' type='primary'>预览</Button> : null
         }</h3>
         <p>WorkCode：{props.data.work_code}</p>
         <p>CubeSize：{props.data.cube_size}</p>
