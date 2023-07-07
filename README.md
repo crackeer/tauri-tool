@@ -43,3 +43,5 @@ cargo tauri dev
 
 [![ppOrIe0.png](https://s1.ax1x.com/2023/04/11/ppOrIe0.png)](https://imgse.com/i/ppOrIe0)
 
+## Build Windinws Version In MacOS
+> cargo tauri build -- --target x86_64-pc-windows-msvc
