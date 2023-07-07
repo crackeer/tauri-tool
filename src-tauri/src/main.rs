@@ -14,6 +14,9 @@ use command::file::{
 use command::work::{
     add_work_download_task, query_all_task_state
 };
+use command::project::{
+    add_project_download_task, query_project_download_state
+};
 use tauri::{CustomMenuItem, Menu, MenuItem, Submenu};
 use tauri::{Window, WindowMenuEvent};
 
@@ -46,6 +49,8 @@ fn main() {
             file_exists,
             add_work_download_task,
             query_all_task_state,
+            add_project_download_task, 
+            query_project_download_state
         ])
         .menu(menu)
         .on_menu_event(window_menu_event)

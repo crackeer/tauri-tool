@@ -304,4 +304,8 @@ async fn download_projects_from_task_list() -> Result<String, String> {
     set_running(0);
     Ok("Ok".to_string())
 }
+#[tauri::command]
+pub async fn query_project_download_state() -> HashMap<String, TaskState> {
+    get_task_state()
+}
 

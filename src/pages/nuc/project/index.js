@@ -110,6 +110,9 @@ class App extends React.Component {
             主机项目 <Button onClick={this.getProjectList} size='mini' type='primary'>刷新</Button>
         </Space></h3>
     }
+    downloadProject = (item) => {
+        console.log(item)
+    }
 
     render() {
         if (this.state.loading) {
@@ -172,7 +175,7 @@ class App extends React.Component {
                                 <Col span={12}>
                                     <h3>Project信息</h3>
                                     <p>ID：{item.id}</p>
-                                    <p>ProjectID：{item.project_id}</p>
+                                    <p>ProjectID：{item.project_id}<Button onClick={this.downloadProject.bind(item)} size='mini' type='primary'>下载</Button></p>
                                     <p>WorkID：{item.work_id}</p>
                                     <p>OfflineID：{item.offline_id}</p>
                                     <p>Status：{item.status}</p>
