@@ -3,6 +3,7 @@ import { Button, Input, Grid, Space, Card, Tag, Pagination, Empty } from '@arco-
 import { IconExclamation, IconLoading } from '@arco-design/web-react/icon';
 import api from '@/util/api';
 import common from '@/util/common';
+import invoke from '@/util/invoke';
 import { open } from '@tauri-apps/api/shell';
 const Row = Grid.Row;
 const Col = Grid.Col;
@@ -110,8 +111,10 @@ class App extends React.Component {
             主机项目 <Button onClick={this.getProjectList} size='mini' type='primary'>刷新</Button>
         </Space></h3>
     }
-    downloadProject = (item) => {
+    downloadProject = async (item) => {
         console.log(item)
+        let extension = JSON.parse(item.extension)
+        await invoke.addProjectDownload("/tmp/download_project", item.project_id, extension.db_version)
     }
 
     render() {
@@ -175,7 +178,7 @@ class App extends React.Component {
                                 <Col span={12}>
                                     <h3>Project信息</h3>
                                     <p>ID：{item.id}</p>
-                                    <p>ProjectID：{item.project_id}<Button onClick={this.downloadProject.bind(item)} size='mini' type='primary'>下载</Button></p>
+                                    <p>ProjectID：{item.project_id}<Button onClick={this.downloadProject.bind(this,item)} size='mini' type='primary'>下载</Button></p>
                                     <p>WorkID：{item.work_id}</p>
                                     <p>OfflineID：{item.offline_id}</p>
                                     <p>Status：{item.status}</p>

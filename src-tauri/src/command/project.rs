@@ -1,10 +1,14 @@
 use reqwest;
 use serde::{Deserialize, Serialize};
+use core::slice::SlicePattern;
 use std::collections::HashMap;
 use std::fs::{self, File};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use tokio;
+use zip::write::FileOptions;
+use std::io::{copy, Read};
+use bytes::Bytes;
 
 #[warn(dead_code)]
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -27,7 +31,6 @@ lazy_static! {
         Arc::new(Mutex::new(HashMap::new()));
     pub static ref RUNNING: Arc<Mutex<usize>> = Arc::new(Mutex::new(0));
 }
-
 
 fn get_task() -> Option<Task> {
     let mut list = TASK_LIST.lock().unwrap();
@@ -91,7 +94,7 @@ pub struct Data {
     title: String,
     db_version: String,
     files: Files,
-    exported: bool,
+    exported: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -144,7 +147,7 @@ pub struct Scan {
     device_sn: String,
 }
 
-fn get_scan_list(info : &Info) -> Vec<String> {
+fn get_scan_list(info: &Info) -> Vec<String> {
     let mut derive_list = Vec::<String>::new();
     for item in info.scans.iter() {
         derive_list.push(item.scanid.clone())
@@ -152,32 +155,54 @@ fn get_scan_list(info : &Info) -> Vec<String> {
     derive_list
 }
 
-async fn get_info(project_id: &str, db_version : &str) -> Result<Info, reqwest::Error> {
-    let client = reqwest::Client::new();
-    let url = format!("http://10.11.1.3:84/vrfile/local/rawdata/{}/info/{}/info.jso", project_id, db_version);
-
+async fn get_info(project_id: &str, db_version: &str) -> Result<Info, reqwest::Error> {
+    let url = format!(
+        "http://10.11.1.3:84/vrfile/local/rawdata/{}/info/{}/info.json",
+        project_id, db_version
+    );
+    println!("get info.json url => {}", url);
     let result = reqwest::get(url).await?.json::<Info>().await?;
     Ok(result)
 }
 
-pub async fn download_project_to(project_id: String, db_version : String, dir: String) -> Result<(), String> {
+pub async fn download_project_to(
+    project_id: String,
+    db_version: String,
+    dir: String,
+) -> Result<(), String> {
     let result = get_info(&project_id, &db_version).await;
     if result.is_err() {
-        return Err(result.err().unwrap().to_string())
+        let value = result.err().unwrap().to_string();
+        println!("get_info error=>{}", value);
+        return Err(value.clone());
     }
     let info = result.unwrap();
     let list = get_scan_list(&info);
     let mut download: Vec<(String, String)> = Vec::new();
     for item in list.iter() {
-        let tmp = format!("http://10.11.1.3:84/vrfile/local/rawdata/{}/derived/{}.zip", project_id, item);
-        download.push((tmp, item.clone()));
+        let tmp = format!(
+            "http://10.11.1.3:84/vrfile/local/rawdata/{}/derived/{}.zip",
+            project_id, item
+        );
+        let mut file_name = String::from(item.clone());
+        file_name.push_str(&".zip");
+        download.push((tmp, file_name));
     }
     let path = Path::new(&dir);
     let origin_path = path.join(&"zip");
+    if let Err(err) = create_file_directory(&dir) {
+        return Err(format!(
+            "create file directory `{}` failed: {}",
+            dir,
+            err.as_str()
+        ));
+    }
+
     for (index, item) in download.iter().enumerate() {
         download_file(
             item.0.clone(),
-            origin_path.join(item.1.clone()).to_str().unwrap(),
+            &dir,
+            &item.1.clone(),
         )
         .await?;
         update_task(
@@ -190,10 +215,8 @@ pub async fn download_project_to(project_id: String, db_version : String, dir: S
         );
     }
 
-
     Ok(())
 }
-
 
 fn create_file_directory(dest: &str) -> Result<(), String> {
     let path: &Path = Path::new(dest);
@@ -203,17 +226,7 @@ fn create_file_directory(dest: &str) -> Result<(), String> {
     return Ok(());
 }
 
-async fn download_file(
-    url: String,
-    dest: &str,
-) -> Result<(), String> {
-    if let Err(err) = create_file_directory(dest) {
-        return Err(format!(
-            "create file directory `{}` failed: {}",
-            dest,
-            err.as_str()
-        ));
-    }
+async fn download_file(url: String, dir: &str, derived_id : &str) -> Result<(), String> {
    
     //let resp = reqwest::blocking::get(url);
     let client = reqwest::Client::new();
@@ -223,28 +236,34 @@ async fn download_file(
     if let Err(err) = result {
         return Err(err.to_string());
     }
+
+    // Download
     let response = result.unwrap();
     let bytes = response.bytes().await;
     let content = bytes.unwrap().as_ref().clone().to_vec();
+    let target = &Path::new(dir).join(format!("{}.zip", derived_id));
+    let dest = target.to_str().unwrap();
     if let Err(err) = fs::write(dest, &content) {
         return Err(err.to_string());
     }
+    // Extract
+    let extract_target =  &Path::new(dir).join(format!("{}", derived_id));
+    extract(dest, extract_target.to_str().unwrap());
     Ok(())
 }
 
-
-
 #[tauri::command]
-pub async fn add_project_download_task(dir: String, project_id: String, db_version : String) -> TaskState {
-    if let Err(err) = fs::create_dir_all(String::from(dir.clone())) {
-        return TaskState {
-            message: err.to_string(),
-            state: "failure".to_string(),
-            percent: 0,
-        };
-    }
-
-    add_task(Task { project_id: project_id.clone(), db_version: db_version.clone(), directory: dir.clone() });
+pub async fn add_project_download_task(
+    dir: String,
+    project_id: String,
+    db_version: String,
+) -> TaskState {
+    println!("{},{},{}", project_id, db_version, dir);
+    add_task(Task {
+        project_id: project_id.clone(),
+        db_version: db_version.clone(),
+        directory: dir.clone(),
+    });
     update_task(
         project_id.clone(),
         TaskState {
@@ -265,7 +284,6 @@ pub async fn add_project_download_task(dir: String, project_id: String, db_versi
     };
 }
 
-
 async fn download_projects_from_task_list() -> Result<String, String> {
     set_running(1);
     loop {
@@ -274,6 +292,7 @@ async fn download_projects_from_task_list() -> Result<String, String> {
             break;
         }
         let task = task_result.unwrap();
+        println!("get task {}", task.project_id);
         update_task(
             task.project_id.clone(),
             TaskState {
@@ -282,7 +301,13 @@ async fn download_projects_from_task_list() -> Result<String, String> {
                 message: "".to_string(),
             },
         );
-        match download_project_to(task.project_id.clone(), task.db_version.clone(), task.directory.clone()).await {
+        match download_project_to(
+            task.project_id.clone(),
+            task.db_version.clone(),
+            task.directory.clone(),
+        )
+        .await
+        {
             Ok(_) => update_task(
                 task.project_id.clone(),
                 TaskState {
@@ -309,3 +334,33 @@ pub async fn query_project_download_state() -> HashMap<String, TaskState> {
     get_task_state()
 }
 
+
+fn extract(test: &str , mut dest: &str) {
+    let zipfile = std::fs::File::open(&test).unwrap();
+    let mut zip = zip::ZipArchive::new(zipfile).unwrap();
+
+    let mut target = Path::new(dest);
+    if !target.exists() {
+        fs::create_dir_all(target).map_err(|e| {
+            println!("{}", e);
+        });
+    }
+    for i in 0..zip.len() {
+        let mut file = zip.by_index(i).unwrap();
+        if file.is_dir() {
+            println!("file utf8 path {:?}", file.name_raw());//文件名编码,在windows下用winrar压缩的文件夹，中文文夹件会码(发现文件名是用操作系统本地编码编码的，我的电脑就是GBK),本例子中的压缩的文件再解压不会出现乱码
+            let target = target.join(Path::new(&file.name().replace("\\", "")));
+            fs::create_dir_all(target).unwrap();
+        } else {
+            let file_path = target.join(Path::new(file.name()));
+            let mut target_file = if !file_path.exists() {
+                println!("file path {}", file_path.to_str().unwrap());
+                fs::File::create(file_path).unwrap()
+            } else {
+                fs::File::open(file_path).unwrap()
+            };
+            copy(&mut file, &mut target_file);
+            // target_file.write_all(file.read_bytes().into());
+        }
+    }
+}
