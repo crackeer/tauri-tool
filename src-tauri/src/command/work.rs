@@ -137,13 +137,13 @@ pub struct Panorama {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PanoramaItem {
     back: String,
-    derived_id: i64,
+    derived_id: Option<i64>,
     down: String,
     front: String,
     index: i64,
     left: String,
     right: String,
-    tiles: Vec<i64>,
+    tiles: Option<Vec<i64>>,
     up: String,
 }
 

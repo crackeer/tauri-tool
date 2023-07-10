@@ -1,15 +1,12 @@
 import React from 'react';
+import { writeText } from '@tauri-apps/api/clipboard';
+import JSONEditor from '@/component/JSONEditor'
 import { Button, Message, Grid, Space, Card, Tag, Empty, Divider, Modal } from '@arco-design/web-react';
 import { IconExclamation, IconLoading } from '@arco-design/web-react/icon';
 import api from '@/util/api';
 import dayjs from 'dayjs';
 const Row = Grid.Row;
 const Col = Grid.Col;
-import { writeText } from '@tauri-apps/api/clipboard';
-import JSONEditor from '@/component/JSONEditor'
-const VrTaskParamsTip = {
-
-}
 
 const EditDataTypeText = {
     'vr_task_global_params' : 'VR任务全局参数',
