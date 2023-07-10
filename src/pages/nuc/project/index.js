@@ -1,10 +1,12 @@
 import React from 'react';
-import { Button, Input, Grid, Space, Card, Tag, Pagination, Empty } from '@arco-design/web-react';
+import { Button, Input, Grid, Space, Card, Tag, Pagination, Empty, Message } from '@arco-design/web-react';
 import { IconExclamation, IconLoading } from '@arco-design/web-react/icon';
 import api from '@/util/api';
 import common from '@/util/common';
 import invoke from '@/util/invoke';
+import cache from '@/util/cache';
 import { open } from '@tauri-apps/api/shell';
+import { open as openDialog } from '@tauri-apps/api/dialog';
 const Row = Grid.Row;
 const Col = Grid.Col;
 
@@ -112,9 +114,24 @@ class App extends React.Component {
         </Space></h3>
     }
     downloadProject = async (item) => {
-        console.log(item)
+        Message.info('请选择下载目录')
+        let selected = await openDialog({
+            directory: true,
+            filters: [{
+                name: 'File',
+                extensions: []
+            }],
+
+        });
+        if (selected == null) {
+            return
+        }
+        const {join} = await import('@tauri-apps/api/path');
+        let realPath = await join(selected, item.name);
+        alert(realPath)
         let extension = JSON.parse(item.extension)
-        await invoke.addProjectDownload("/tmp/download_project", item.project_id, extension.db_version)
+        await invoke.addProjectDownload(realPath, item.project_id, extension.db_version)
+        await cache.addProject([realPath])
     }
 
     render() {
@@ -176,9 +193,9 @@ class App extends React.Component {
                         } key={item.id} hoverable={true}>
                             <Row gutter={30}>
                                 <Col span={12}>
-                                    <h3>Project信息</h3>
+                                    <h3>Project信息 <Button onClick={this.downloadProject.bind(this,item)} size='mini' type='primary'>下载</Button></h3>
                                     <p>ID：{item.id}</p>
-                                    <p>ProjectID：{item.project_id}<Button onClick={this.downloadProject.bind(this,item)} size='mini' type='primary'>下载</Button></p>
+                                    <p>ProjectID：{item.project_id}</p>
                                     <p>WorkID：{item.work_id}</p>
                                     <p>OfflineID：{item.offline_id}</p>
                                     <p>Status：{item.status}</p>

@@ -15,6 +15,7 @@ const MenuList = [
     {'key' : 'nuc_task', 'icon' : <IconSend />, 'href': '/nuc/task', 'title': '主机任务'},
     {'key' : 'nuc_tf', 'icon' : <IconScan />, 'href': '/nuc/tf', 'title': 'TF卡'},
     {'key' : 'work', 'icon' : <IconCloudDownload />, 'href': '/work', 'title': 'VR下载'},
+    {'key' : 'nuc_project_download', 'icon' : <IconCloudDownload />, 'href': '/nuc/project/download', 'title': '项目下载'},
 ]
 
 function getMarginLeft(value) {
@@ -63,7 +64,7 @@ class ClassApp extends React.Component {
         cache.setMenuCollapsed(value ? 1 : 0)
     }
     clickMenuItem = async (key) => {
-        window.location.href = "/" + key
+        //window.location.href = "/" + key
         for(var i in MenuList) {
             if(MenuList[i].key === key) {
                 window.location.href = MenuList[i].href

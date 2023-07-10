@@ -1,12 +1,12 @@
-import { writeTextFile, BaseDirectory, readTextFile, readDir, createDir, removeFile } from '@tauri-apps/api/fs';
+import { writeTextFile, BaseDirectory, readTextFile } from '@tauri-apps/api/fs';
 import dayjs from 'dayjs';
-import { add } from 'lodash';
 
 const MenuCollapsed = "MenuCollapsed";
 const OpenFiles = "OpenFiles";
 
 const VRDir = "VRDir"
 const VRFiles = "VRFiles"
+const Project = "Project"
 
 var get = async (key) => {
     try {
@@ -106,6 +106,30 @@ var deleteVRFiles = async (add) => {
     await set(VRFiles, JSON.stringify(files))
     return files
 }
+
+var getProject = async () => {
+    let value = await get(Project)
+    if(value.length < 1) {
+        return []
+    }
+    return JSON.parse(value)
+}
+
+var addProject = async (add) => {
+    let files = await getProject()
+    files = addFiles(files, add)
+    await set(Project, JSON.stringify(files))
+    return files
+}
+
+var deleteProject = async (add) => {
+    let files = await getProject()
+    files = files.filter(item => {
+        return add.indexOf(item.file) < 0
+    })
+    await set(Project, JSON.stringify(files))
+    return files
+}
 export default {
     getMenuCollapsed,
     setMenuCollapsed, 
@@ -116,5 +140,8 @@ export default {
     setVRDir,
     getVRFiles,
     addVRFiles,
-    deleteVRFiles
+    deleteVRFiles,
+    addProject,
+    deleteProject,
+    getProject,
 }

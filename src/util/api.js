@@ -1,7 +1,5 @@
-import { fetch } from '@tauri-apps/api/http';
+import { fetch,Body } from '@tauri-apps/api/http';
 import common from './common'
-import { Body } from "@tauri-apps/api/http"
-import dayjs from 'dayjs';
 const get = async (url, query) => {
     if (query != null) {
         url = url + '?' + common.httpBuildQuery(query)
@@ -149,6 +147,22 @@ const queryVrapi = async (query) => {
     return result.data
 }
 
+const queryVrapiV2 = async (query) => {
+    let result = await post('http://10.11.1.3/__proxy__/opensvc/util_database_vrapi', query)
+    if(result == null) {
+        return {
+            data : {
+                list : [],
+                total_page : 0,
+                total : 0,    
+            },
+            code : -99,
+            status : 'query erro'
+        }
+    }
+    return result
+}
+
 const queryShepherd = async (query) => {
     let result = await post('http://10.11.1.3/__proxy__/shepherd/util_database_shepherd', query)
     if(result == null) {
@@ -184,11 +198,30 @@ const setNucTime = async(ts) => {
     return result
 }
 
+const updateVrTaskGlobalParams = async(value) => {
+    let result = await post('http://10.11.1.3/__proxy__/opensvc/strategy_update', {
+        "name":"realsee-open-svc",
+        "key" : "vr_task.global_alg_params",
+        "value" : JSON.stringify(value)
+    })
+    return result
+}
+
+const updateVRFileLocalConfig = async(value) => {
+    let result = await post('http://10.11.1.3/__proxy__/opensvc/strategy_update', {
+        "name":"vrfile",
+        "key" : "local_config",
+        "value" : JSON.stringify(value)
+    })
+    return result
+}
+
 
 export default {
-    getTFState, getTFProjects, getTFImportLog, getTFVRFileList, queryVrapi, queryShepherd, decodeWorkCode, getAccessToken, getNucSystemInfo, setNucTime
+    getTFState, getTFProjects, getTFImportLog, getTFVRFileList, queryVrapi, queryVrapiV2, queryShepherd, decodeWorkCode, getAccessToken, getNucSystemInfo, setNucTime, updateVrTaskGlobalParams, updateVRFileLocalConfig
 }
 
 export {
-    getTFState, getTFProjects, getTFImportLog, getTFVRFileList, queryVrapi, queryShepherd, decodeWorkCode, getAccessToken, getNucSystemInfo, setNucTime
+    getTFState, getTFProjects, getTFImportLog, getTFVRFileList, queryVrapi,queryVrapiV2, queryShepherd, decodeWorkCode, getAccessToken, getNucSystemInfo, 
+    setNucTime, updateVrTaskGlobalParams, updateVRFileLocalConfig
 }

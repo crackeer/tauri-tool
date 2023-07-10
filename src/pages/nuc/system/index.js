@@ -1,20 +1,40 @@
 import React from 'react';
-import { Button, Message, Grid, Space, Card, Tag, Empty, Divider } from '@arco-design/web-react';
+import { Button, Message, Grid, Space, Card, Tag, Empty, Divider, Modal } from '@arco-design/web-react';
 import { IconExclamation, IconLoading } from '@arco-design/web-react/icon';
 import api from '@/util/api';
 import dayjs from 'dayjs';
 const Row = Grid.Row;
 const Col = Grid.Col;
+import { writeText } from '@tauri-apps/api/clipboard';
+import JSONEditor from '@/component/JSONEditor'
+const VrTaskParamsTip = {
+
+}
+
+const EditDataTypeText = {
+    'vr_task_global_params' : 'VR任务全局参数',
+    'host_list' : '域名信息'
+}
+
 class App extends React.Component {
+    json = null
     constructor(props) {
         super(props);
         this.state = {
             system: null,
             loading: false,
+            vr_task_global_params: {},
+            host_list: {},
+
+            visible : false,
+            json : {},
+            jsonDataType : '',
         }
     }
     async componentDidMount() {
-        this.getSystemData()
+        await this.getSystemData()
+        await this.getVRTaskGlobalParams()
+        await this.getHostList()
     }
     getSystemData = async () => {
         if (this.state.loading) {
@@ -44,20 +64,116 @@ class App extends React.Component {
             loading: false,
         })
     }
+    getVRTaskGlobalParams = async () => {
+        await this.setState({
+            loading: true,
+            vr_task_global_params: {},
+        })
+        let data = await api.queryVrapiV2({
+            table: 'strategy',
+            query: {
+                'name': 'realsee-open-svc',
+                '`key`': 'vr_task.global_alg_params'
+            }
+        })
+        console.log(data)
+        await this.setState({
+            loading: false
+        })
+        if (data.code != 0) {
+            Message.error(data.status)
+            return
+        }
+        if (data.data.list.length < 1) {
+            Message.error("not found")
+            return
+        }
+        let params = JSON.parse(data.data.list[0].value)
+        await this.setState({
+            vr_task_global_params: params
+        })
+    }
+    getHostList = async () => {
+        await this.setState({
+            loading: true,
+            host_list: {},
+        })
+        let data = await api.queryVrapiV2({
+            table: 'strategy',
+            query: {
+                'name': 'vrfile',
+                '`key`': 'local_config'
+            }
+        })
+        await this.setState({
+            loading: false
+        })
+        if (data.code != 0) {
+            Message.error(data.status)
+            return
+        }
+        if (data.data.list.length < 1) {
+            Message.error("host list config not found")
+            return
+        }
+        let params = JSON.parse(data.data.list[0].value)
+        await this.setState({
+            host_list: params
+        })
+    }
+    refresh = async () => {
+        await this.getSystemData()
+        await this.getVRTaskGlobalParams()
+        await this.getHostList()
+    }
     htmlTitle = () => {
         return <h3><Space>
             主机
-            <Button onClick={this.getSystemData} type='primary' size="mini">刷新</Button>
+            <Button onClick={this.refresh} type='primary' size="mini">刷新</Button>
         </Space></h3>
     }
-    fixNucTime = async ()=> {
+    fixNucTime = async () => {
         let result = await api.setNucTime(dayjs().unix())
-        if(result.code < 0) {
+        if (result.code < 0) {
             Message.error(result.status)
             return
         }
         Message.success("修正成功")
         this.getSystemData()
+    }
+    copyData = async (data) => {
+        await writeText(JSON.stringify(data))
+        Message.success("复制成功")
+    }
+    editData = async (dataType, data) => {
+        await this.setState({
+            json : {},
+            jsonDataType : dataType,
+            visible : true,
+        })
+        setTimeout( () =>  this.json.set(data), 300)
+       
+    }
+    doUpdateJSON = async () => {
+        console.log(this.state.json)
+        let result = null
+        if(this.state.jsonDataType == 'vr_task_global_params') {
+            result = await api.updateVrTaskGlobalParams(this.state.json)
+        } else if (this.state.jsonDataType == 'host_list') {
+            result = await api.updateVRFileLocalConfig(this.state.json)
+        }
+        if(result == null) {
+            return
+        }
+        if(result.code != 0) {
+            Message.error(result.status)
+            return
+        }
+        Message.success('修改成功')
+        await this.setState({
+            visible : false
+        })
+        this.refresh()
     }
 
     render() {
@@ -132,31 +248,56 @@ class App extends React.Component {
                             {this.state.system.Resource.Storage.map(item => {
                                 return <Col span={12}>
                                     <Divider orientation='left'>{item.file_system}</Divider>
-                                    <p><strong>文件系统容量：</strong>{(item.total / 1024/ 1024).toFixed(2)}GB</p>
-                                    <p><strong>文件系统使用量：</strong>{(item.used /1024 / 1024).toFixed(2)}GB</p>
+                                    <p><strong>文件系统容量：</strong>{(item.total / 1024 / 1024).toFixed(2)}GB</p>
+                                    <p><strong>文件系统使用量：</strong>{(item.used / 1024 / 1024).toFixed(2)}GB</p>
                                     <p><strong>文件系统使用量（百分比）</strong>{item.capacity}</p>
                                 </Col>
                             })}
                         </Row>
                     </Card>
                 </Col>
-                <Col span={12}>
+                <Col span={12} style={{ marginBottom: '20px' }}>
                     <Card title="CPU" style={{ height: '230px' }}>
                         <p><strong>CPU类型：</strong>{this.state.system.Resource.CPU.Model}</p>
                         <p><strong>core数：</strong>{this.state.system.Resource.CPU.Cores}</p>
                         <p><strong>thread数：</strong>{this.state.system.Resource.CPU.Threads}</p>
                         <p><strong>CPU 百万条指令每秒：</strong>{this.state.system.Resource.CPU.BogoMIPS}</p>
-
+                    </Card>
+                </Col>
+                <Col span={12} style={{ marginBottom: '20px' }}>
+                    <Card title="RAM" style={{ height: '230px' }}>
+                        <p><strong>总内存量：</strong>{(this.state.system.Resource.RAM.Total / 1024 / 1024).toFixed(2)}GB</p>
+                        <p><strong>空闲内存量：</strong>{(this.state.system.Resource.RAM.Free / 1024 / 1024).toFixed(2)}GB</p>
+                        <p><strong>交换空间空闲量：</strong>{(this.state.system.Resource.RAM.Swap / 1024 / 1024).toFixed(2)}</p>
                     </Card>
                 </Col>
                 <Col span={12}>
-                    <Card title="RAM" style={{ height: '230px' }}>
-                        <p><strong>总内存量：</strong>{(this.state.system.Resource.RAM.Total / 1024 / 1024).toFixed(2)}GB</p>
-                        <p><strong>空闲内存量：</strong>{(this.state.system.Resource.RAM.Free / 1024 / 1024 ).toFixed(2)}GB</p>
-                        <p><strong>交换空间空闲量：</strong>{(this.state.system.Resource.RAM.Swap/1024/1024).toFixed(2)}</p>
+                    <Card title="VR任务全局参数" extra={
+                        <><Button type="text" onClick={this.copyData.bind(this, this.state.vr_task_global_params)}>复制</Button>
+                        <Button type="text" onClick={this.editData.bind(this, 'vr_task_global_params', this.state.vr_task_global_params)}>修改</Button></>}>
+                        {
+                            Object.keys(this.state.vr_task_global_params).map(item => {
+                                return <p><strong>{item}：</strong>{this.state.vr_task_global_params[item]}</p>
+                            })
+                        }
+                    </Card>
+                </Col>
+                <Col span={12}>
+                    <Card title="域名信息" extra={<><Button type="text" onClick={this.copyData.bind(this, this.state.host_list)}>复制</Button>
+                    <Button type="text" onClick={this.editData.bind(this, 'host_list', this.state.host_list)}>修改</Button></>}>
+                        {
+                            Object.keys(this.state.host_list).map(item => {
+                                return <p><strong>{item}：</strong>{this.state.host_list[item]}</p>
+                            })
+                        }
                     </Card>
                 </Col>
             </Row>
+            <Modal visible={this.state.visible} onCancel={()=> this.setState({visible: false})} style={{width:'60%'}} title={'修改`' + EditDataTypeText[this.state.jsonDataType] + '`'} onOk={this.doUpdateJSON}>
+                <JSONEditor height={300} ref={(ele) => this.json = ele} json={this.state.json} onValidate={(val) => {
+                    this.setState({json:val})
+                }}/>
+            </Modal>
         </>
     }
 }
