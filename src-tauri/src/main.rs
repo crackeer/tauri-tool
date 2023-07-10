@@ -3,7 +3,7 @@
     windows_subsystem = "windows"
 )]
 mod command;
-
+mod util;
 use std::vec;
 #[macro_use]
 extern crate lazy_static;
