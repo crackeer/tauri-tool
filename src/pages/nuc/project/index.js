@@ -128,10 +128,11 @@ class App extends React.Component {
         }
         const {join} = await import('@tauri-apps/api/path');
         let realPath = await join(selected, item.name);
-        alert(realPath)
         let extension = JSON.parse(item.extension)
         await invoke.addProjectDownload(realPath, item.project_id, extension.db_version)
         await cache.addProject([realPath])
+        Message.success('已添加到下载列表')
+        window.location.href = '/nuc/project/download'
     }
 
     render() {

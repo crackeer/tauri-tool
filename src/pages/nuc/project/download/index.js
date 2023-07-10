@@ -47,7 +47,7 @@ class App extends React.Component {
     }
     queryTaskState = async () => {
         let data = await invoke.queryProjectDownloadTask()
-        let tasks = Object.keys(data);
+        console.log(data)
         await this.setState({
             runningTask: data,
         })

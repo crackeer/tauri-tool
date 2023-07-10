@@ -204,34 +204,18 @@ pub async fn download_project_to(
         let cc = download_path.join(&zip_file_name);
         let dest = cc.to_str().unwrap();
         if let Err(err) = file::download_file_to(&item.0.clone(), dest).await {
-            println!("download derived error {}", err);
-            update_task(
-                dir.clone(),
-                TaskState {
-                    state: "failure".to_string(),
-                    percent: index + 1 / download.len(),
-                    message: err.clone(),
-                },
-            );
             return Err(err)
         }
         let extract_dest = Path::new(&dir).join(&item.1);
         if let Err(err) = file::extract_zip(dest, extract_dest.to_str().unwrap()) {
-            update_task(
-                dir.clone(),
-                TaskState {
-                    state: "failure".to_string(),
-                    percent: index + 1 / download.len(),
-                    message: err.clone(),
-                },
-            );
             return Err(err)
         }
+        println!("{} - {} - {}", index +1, download.len(), (index + 1) * 100 / download.len());
         update_task(
             dir.clone(),
             TaskState {
                 state: "running".to_string(),
-                percent: index + 1 / download.len(),
+                percent: (index + 1) * 100 / download.len(),
                 message: "".to_string(),
             },
         );
@@ -239,9 +223,9 @@ pub async fn download_project_to(
     let result = get_info_text(&project_id, &db_version).await;
     let info_path = Path::new(&dir).join(&"info.json"); 
     if let Ok(value) = result {
-        fs::write(info_path, value.as_bytes());
+        _ = fs::write(info_path, value.as_bytes());
     }
-    fs::remove_dir_all(&download_path);
+    _ = fs::remove_dir_all(&download_path);
     Ok(())
 }
 
@@ -258,7 +242,7 @@ pub async fn add_project_download_task(
         directory: dir.clone(),
     });
     update_task(
-        project_id.clone(),
+        dir.clone(),
         TaskState {
             state: "waiting".to_string(),
             percent: 0,
@@ -285,12 +269,11 @@ async fn download_projects_from_task_list() -> Result<String, String> {
             break;
         }
         let task = task_result.unwrap();
-        println!("get task {}", task.project_id);
         update_task(
-            task.project_id.clone(),
+            task.directory.clone(),
             TaskState {
                 state: "running".to_string(),
-                percent: 10,
+                percent: 1,
                 message: "".to_string(),
             },
         );
@@ -302,18 +285,18 @@ async fn download_projects_from_task_list() -> Result<String, String> {
         .await
         {
             Ok(_) => update_task(
-                task.project_id.clone(),
+                task.directory.clone(),
                 TaskState {
                     state: "success".to_string(),
-                    percent: 10,
+                    percent: 100,
                     message: "".to_string(),
                 },
             ),
             Err(err) => update_task(
-                task.project_id.clone(),
+                task.directory.clone(),
                 TaskState {
                     state: "failure".to_string(),
-                    percent: 10,
+                    percent: 100,
                     message: err.to_string(),
                 },
             ),

@@ -229,11 +229,12 @@ pub async fn download_work_to(work: &Work, dir: String) -> Result<(), String> {
             index,
         )
         .await?;
+    
         update_task(
             dir.clone(),
             TaskState {
                 state: "running".to_string(),
-                percent: index + 1 / download.len(),
+                percent: (index + 1) * 100 / download.len(),
                 message: "".to_string(),
             },
         );
