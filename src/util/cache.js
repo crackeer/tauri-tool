@@ -7,6 +7,7 @@ const OpenFiles = "OpenFiles";
 const VRDir = "VRDir"
 const VRFiles = "VRFiles"
 const Project = "Project"
+const ProjectSaveDir = "ProjectSaveDir"
 
 var get = async (key) => {
     try {
@@ -130,6 +131,14 @@ var deleteProject = async (add) => {
     await set(Project, JSON.stringify(files))
     return files
 }
+var getProjectSaveDir = async () => {
+    return await get(ProjectSaveDir)
+}
+
+var setProjectSaveDir = async (dir) => {
+    await set(ProjectSaveDir, dir +'')
+}
+
 export default {
     getMenuCollapsed,
     setMenuCollapsed, 
@@ -144,4 +153,6 @@ export default {
     addProject,
     deleteProject,
     getProject,
+    getProjectSaveDir,
+    setProjectSaveDir
 }

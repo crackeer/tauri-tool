@@ -55,7 +55,6 @@ var md5 = (str) => {
   
 }
 
-
 function getQuery(key, value) {
     let url = new URLSearchParams(window.location.search)
     return url.get(key) || value

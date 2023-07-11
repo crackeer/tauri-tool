@@ -104,8 +104,8 @@ class App extends React.Component {
         }
         await this.setState(data)
         await this.setState({
-            workList: workData, 
-            loading : false
+            workList: workData,
+            loading: false
         })
     }
     htmlTitle = () => {
@@ -114,6 +114,14 @@ class App extends React.Component {
         </Space></h3>
     }
     downloadProject = async (item) => {
+        let extension = JSON.parse(item.extension)
+        window.location.href = '/nuc/project/download?' + common.httpBuildQuery({
+            project_id : item.project_id,
+            db_version : extension.db_version,
+            project_name : item.name,
+        })
+        return
+        /*
         Message.info('请选择下载目录')
         let selected = await openDialog({
             directory: true,
@@ -126,13 +134,14 @@ class App extends React.Component {
         if (selected == null) {
             return
         }
-        const {join} = await import('@tauri-apps/api/path');
+        const { join } = await import('@tauri-apps/api/path');
         let realPath = await join(selected, item.name);
         let extension = JSON.parse(item.extension)
         await invoke.addProjectDownload(realPath, item.project_id, extension.db_version)
         await cache.addProject([realPath])
         Message.success('已添加到下载列表')
         window.location.href = '/nuc/project/download'
+        */
     }
 
     render() {
@@ -153,7 +162,7 @@ class App extends React.Component {
                                 justifyContent: 'center',
                             }}
                         >
-                           <IconLoading />
+                            <IconLoading />
                         </div>
                     }
                     description='努力加载中...'
@@ -194,7 +203,7 @@ class App extends React.Component {
                         } key={item.id} hoverable={true}>
                             <Row gutter={30}>
                                 <Col span={12}>
-                                    <h3>Project信息 <Button onClick={this.downloadProject.bind(this,item)} size='mini' type='primary'>下载</Button></h3>
+                                    <h3>Project信息 <Button onClick={this.downloadProject.bind(this, item)} size='mini' type='primary'>下载</Button></h3>
                                     <p>ID：{item.id}</p>
                                     <p>ProjectID：{item.project_id}</p>
                                     <p>WorkID：{item.work_id}</p>
