@@ -1,12 +1,11 @@
 
 use reqwest;
 use serde::{Deserialize, Serialize};
-use std::fs::{self, File};
+use std::fs::{self};
 use std::path::Path;
-use std::sync::{Arc, Mutex};
 use std::io::{copy};
 
-
+#[allow(dead_code)]
 pub fn create_file_parent_directory(dest: &str) -> Result<(), String> {
     let path: &Path = Path::new(dest);
     if let Err(err) = std::fs::create_dir_all(path.parent().unwrap()) {
@@ -31,9 +30,12 @@ pub async fn download_file_to(url: &str, dest : &str) -> Result<(), String> {
     Ok(())
 }
 
-pub fn extract_zip(zip_file: &str, mut dir: &str) -> Result<(), String>{
-    let zipfile = std::fs::File::open(zip_file).unwrap();
-    let mut zip = zip::ZipArchive::new(zipfile).unwrap();
+pub fn extract_zip(zip_file: &str, dir: &str) -> Result<(), String>{
+    let zipfile = std::fs::File::open(zip_file);
+    if let Err(err) = zipfile {
+        return  Err(err.to_string());
+    }
+    let mut zip = zip::ZipArchive::new(zipfile.unwrap()).unwrap();
 
     let mut target = Path::new(dir);
     if !target.exists() {

@@ -3,10 +3,7 @@ import { Button, Input, Grid, Space, Card, Tag, Pagination, Empty, Message } fro
 import { IconExclamation, IconLoading } from '@arco-design/web-react/icon';
 import api from '@/util/api';
 import common from '@/util/common';
-import invoke from '@/util/invoke';
-import cache from '@/util/cache';
 import { open } from '@tauri-apps/api/shell';
-import { open as openDialog } from '@tauri-apps/api/dialog';
 const Row = Grid.Row;
 const Col = Grid.Col;
 
@@ -121,27 +118,6 @@ class App extends React.Component {
             project_name : item.name,
         })
         return
-        /*
-        Message.info('请选择下载目录')
-        let selected = await openDialog({
-            directory: true,
-            filters: [{
-                name: 'File',
-                extensions: []
-            }],
-
-        });
-        if (selected == null) {
-            return
-        }
-        const { join } = await import('@tauri-apps/api/path');
-        let realPath = await join(selected, item.name);
-        let extension = JSON.parse(item.extension)
-        await invoke.addProjectDownload(realPath, item.project_id, extension.db_version)
-        await cache.addProject([realPath])
-        Message.success('已添加到下载列表')
-        window.location.href = '/nuc/project/download'
-        */
     }
 
     render() {
@@ -258,9 +234,16 @@ const WorkInfo = (props) => {
         })
         await open(url)
     }
+    const  downloadVRFile = async () => {
+        window.location.href = '/work?' + common.httpBuildQuery({
+            vr_code: '80' + props.data.work_code,
+        })
+    }
     return <>
         <h3>VR信息 {
             props.data.cube_size > 0 ? <Button onClick={preview} size='mini' type='primary'>预览</Button> : null
+        }  {
+            props.data.cube_size > 0 ? <Button onClick={downloadVRFile} size='mini' type='primary'>下载</Button> : null
         }</h3>
         <p>WorkCode：{props.data.work_code}</p>
         <p>CubeSize：{props.data.cube_size}</p>

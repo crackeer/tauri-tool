@@ -1,4 +1,6 @@
+use crate::util::file;
 use base64::{engine::general_purpose, Engine as _};
+use flate2::read::GzDecoder;
 use reqwest;
 use rust_embed::RustEmbed;
 use serde::{Deserialize, Serialize};
@@ -6,6 +8,7 @@ use std::collections::HashMap;
 use std::fs::{self, File};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
+use tar::Archive;
 use tokio;
 
 #[derive(RustEmbed)]
@@ -91,7 +94,7 @@ pub struct Work {
 pub struct Initial {
     flag_position: Option<Vec<serde_json::Value>>,
     fov: i64,
-    heading: i64,
+    heading: Option<i64>,
     latitude: f64,
     longitude: f64,
     pano: Option<i64>,
@@ -218,6 +221,7 @@ impl Work {
 pub async fn download_work_to(work: &Work, dir: String) -> Result<(), String> {
     let download: Vec<(String, String)> = work.get_download_list();
     let path = Path::new(&dir);
+    let total = download.len() + 2;
     let preview_path = path.join(PREVIEW_DIR);
     let origin_path = path.join(ORIGIN_DIR);
     for (index, item) in download.iter().enumerate() {
@@ -228,16 +232,32 @@ pub async fn download_work_to(work: &Work, dir: String) -> Result<(), String> {
             index,
         )
         .await?;
-    
+
         update_task(
             dir.clone(),
             TaskState {
                 state: "running".to_string(),
-                percent: (index + 1) * 100 / download.len(),
+                percent: (index + 1) * 100 / total,
                 message: "".to_string(),
             },
         );
     }
+
+    if let Err(err) = download_src_model(
+        &work.with_base_url(&"src_model.tar"),
+        origin_path.to_str().unwrap(),
+    )
+    .await
+    {
+        println!("download_src_model error {}", err);
+    }
+
+    _ = download_src_pano(
+        &work.with_base_url(&"src_pano.tar"),
+        origin_path.to_str().unwrap(),
+    )
+    .await;
+
     let work_json = work.get_jsonp_work();
     let work_json_content = format!("var workJSON = {}", work_json);
 
@@ -283,6 +303,53 @@ fn create_file_directory(dest: &str) -> Result<(), String> {
     return Ok(());
 }
 
+async fn download_src_model(url: &str, dir: &str) -> Result<(), String> {
+    let dest = Path::new(dir).join(&"src_model.tar");
+    file::download_file_to(url, dest.to_str().unwrap()).await?;
+    let tar_gz = File::open(dest.clone());
+    if let Err(err) = tar_gz {
+        return Err(err.to_string());
+    }
+    //let tar = GzDecoder::new(tar_gz.unwrap());
+    let mut archive = Archive::new(tar_gz.unwrap());
+    if let Err(err) = archive.unpack(dir) {
+        _ = fs::remove_file(dest);
+        return Err(err.to_string());
+    }
+    _ = fs::remove_file(dest);
+    let material_zip_path = Path::new(dir)
+        .join(&"src_model")
+        .join(&"material")
+        .join(&"material_texture.zip");
+    let extract_material_path = Path::new(dir)
+        .join(&"src_model")
+        .join(&"material")
+        .join(&"material_texture");
+    file::extract_zip(
+        material_zip_path.to_str().unwrap(),
+        extract_material_path.to_str().unwrap(),
+    )?;
+    _ = fs::remove_file(material_zip_path);
+    Ok(())
+}
+
+async fn download_src_pano(url: &str, dir: &str) -> Result<(), String> {
+    let dest = Path::new(dir).join(&"src_pano.tar");
+    file::download_file_to(url, dest.to_str().unwrap()).await?;
+    let tar_gz = File::open(dest.clone());
+    if let Err(err) = tar_gz {
+        return Err(err.to_string());
+    }
+    //let tar = GzDecoder::new(tar_gz.unwrap());
+    let mut archive = Archive::new(tar_gz.unwrap());
+    if let Err(err) = archive.unpack(dir) {
+        _ = fs::remove_file(dest);
+        return Err(err.to_string());
+    }
+    _ = fs::remove_file(dest);
+    Ok(())
+}
+
 async fn download_file(
     url: String,
     dest: &str,
@@ -320,8 +387,7 @@ async fn download_file(
     }
     let bytes = response.bytes().await;
     let content = bytes.unwrap().as_ref().clone().to_vec();
-    let base64_data =
-        generate_jsonp_content(&content_type, &content, jsonp_hash_code);
+    let base64_data = generate_jsonp_content(&content_type, &content, jsonp_hash_code);
     if let Err(err) = fs::write(dest, &content) {
         return Err(err.to_string());
     }

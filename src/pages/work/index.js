@@ -4,6 +4,7 @@ import { open } from '@tauri-apps/api/dialog';
 import cache from '@/util/cache';
 import invoke from '@/util/invoke'
 import common from '@/util/common'
+import api from '@/util/api'
 import { IconFolder, IconDelete, IconLoading } from '@arco-design/web-react/icon';
 import { Card, Avatar, Link, Typography, Space, Row } from '@arco-design/web-react';
 import { open as ShellOpen } from '@tauri-apps/api/shell';
@@ -24,6 +25,23 @@ class App extends React.Component {
     async componentDidMount() {
         this.getVRFiles()
         this.queryTaskState()
+        this.ifDownloadNew()
+    }
+    ifDownloadNew = async () => {
+        let vrCode = common.getQuery('vr_code', '')
+        if(vrCode.length < 1) {
+            return
+        }
+        let result = await api.getWorkJSON(vrCode)
+        if(result.code != 0) {
+            Message.error(result.status)
+            return
+        }
+        await this.setState({
+            visible : true,
+            saveName : vrCode,
+            workJSON : JSON.stringify(result.data),
+        })
     }
     getVRFiles = async () => {
         let files = await cache.getVRFiles()
