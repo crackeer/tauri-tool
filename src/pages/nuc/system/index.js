@@ -9,8 +9,8 @@ const Row = Grid.Row;
 const Col = Grid.Col;
 
 const EditDataTypeText = {
-    'vr_task_global_params' : 'VR任务全局参数',
-    'host_list' : '域名信息'
+    'vr_task_global_params': 'VR任务全局参数',
+    'host_list': '域名信息'
 }
 
 class App extends React.Component {
@@ -23,9 +23,9 @@ class App extends React.Component {
             vr_task_global_params: {},
             host_list: {},
 
-            visible : false,
-            json : {},
-            jsonDataType : '',
+            visible: false,
+            json: {},
+            jsonDataType: '',
         }
     }
     async componentDidMount() {
@@ -144,33 +144,52 @@ class App extends React.Component {
     }
     editData = async (dataType, data) => {
         await this.setState({
-            json : {},
-            jsonDataType : dataType,
-            visible : true,
+            json: {},
+            jsonDataType: dataType,
+            visible: true,
         })
-        setTimeout( () =>  this.json.set(data), 300)
-       
+        setTimeout(() => this.json.set(data), 300)
+
     }
     doUpdateJSON = async () => {
         console.log(this.state.json)
         let result = null
-        if(this.state.jsonDataType == 'vr_task_global_params') {
+        if (this.state.jsonDataType == 'vr_task_global_params') {
             result = await api.updateVrTaskGlobalParams(this.state.json)
         } else if (this.state.jsonDataType == 'host_list') {
             result = await api.updateVRFileLocalConfig(this.state.json)
         }
-        if(result == null) {
+        if (result == null) {
             return
         }
-        if(result.code != 0) {
+        if (result.code != 0) {
             Message.error(result.status)
             return
         }
         Message.success('修改成功')
         await this.setState({
-            visible : false
+            visible: false
         })
         this.refresh()
+    }
+    getAccessToken = async () => {
+        let data = await api.getAccessToken()
+        Message.info(JSON.stringify(data))
+    }
+    shutdown = async () => {
+        Modal.confirm({
+            title: '关机确认',
+            content:
+                '确认要关机么？',
+            okButtonProps: {
+                status: 'danger',
+            },
+            onConfirm: api.shutdownNuc,
+            onOk : () => {
+                api.shutdownNuc()
+                Message.info('关机指令发送成功，正在关机中')
+            }
+        });
     }
 
     render() {
@@ -237,6 +256,9 @@ class App extends React.Component {
                                 <Tag> {this.state.system.Resource.Load[2]}（15分钟）</Tag>
                             </Space>
                         </p>
+                        <Divider></Divider>
+                        <Button type="primary" status='danger' onClick={this.shutdown} size='small'>设备关机</Button>
+
                     </Card>
                 </Col>
                 <Col span={24} style={{ marginBottom: '20px' }}>
@@ -271,7 +293,7 @@ class App extends React.Component {
                 <Col span={12}>
                     <Card title="VR任务全局参数" extra={
                         <><Button type="text" onClick={this.copyData.bind(this, this.state.vr_task_global_params)}>复制</Button>
-                        <Button type="text" onClick={this.editData.bind(this, 'vr_task_global_params', this.state.vr_task_global_params)}>修改</Button></>}>
+                            <Button type="text" onClick={this.editData.bind(this, 'vr_task_global_params', this.state.vr_task_global_params)}>修改</Button></>}>
                         {
                             Object.keys(this.state.vr_task_global_params).map(item => {
                                 return <p><strong>{item}：</strong>{this.state.vr_task_global_params[item]}</p>
@@ -281,19 +303,22 @@ class App extends React.Component {
                 </Col>
                 <Col span={12}>
                     <Card title="域名信息" extra={<><Button type="text" onClick={this.copyData.bind(this, this.state.host_list)}>复制</Button>
-                    <Button type="text" onClick={this.editData.bind(this, 'host_list', this.state.host_list)}>修改</Button></>}>
+                        <Button type="text" onClick={this.editData.bind(this, 'host_list', this.state.host_list)}>修改</Button>
+                    </>}>
                         {
                             Object.keys(this.state.host_list).map(item => {
                                 return <p><strong>{item}：</strong>{this.state.host_list[item]}</p>
                             })
                         }
+                        <Divider></Divider>
+                        <Button type="text" onClick={this.getAccessToken}>获取网关AccessToken</Button>
                     </Card>
                 </Col>
             </Row>
-            <Modal visible={this.state.visible} onCancel={()=> this.setState({visible: false})} style={{width:'60%'}} title={'修改`' + EditDataTypeText[this.state.jsonDataType] + '`'} onOk={this.doUpdateJSON}>
+            <Modal visible={this.state.visible} onCancel={() => this.setState({ visible: false })} style={{ width: '60%' }} title={'修改`' + EditDataTypeText[this.state.jsonDataType] + '`'} onOk={this.doUpdateJSON}>
                 <JSONEditor height={300} ref={(ele) => this.json = ele} json={this.state.json} onValidate={(val) => {
-                    this.setState({json:val})
-                }}/>
+                    this.setState({ json: val })
+                }} />
             </Modal>
         </>
     }
