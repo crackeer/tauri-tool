@@ -1,6 +1,5 @@
 
 use reqwest;
-use serde::{Deserialize, Serialize};
 use std::fs::{self};
 use std::path::Path;
 use std::io::{copy};
@@ -37,7 +36,7 @@ pub fn extract_zip(zip_file: &str, dir: &str) -> Result<(), String>{
     }
     let mut zip = zip::ZipArchive::new(zipfile.unwrap()).unwrap();
 
-    let mut target = Path::new(dir);
+    let target = Path::new(dir);
     if !target.exists() {
         if let Err(err)= fs::create_dir_all(target) {
             return Err(err.to_string());
