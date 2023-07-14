@@ -92,7 +92,6 @@ var getWorkJSONFromJSCodeList2 = (list) => {
     for(var i in list) {
         if(list[i].indexOf('houseInfo') > -1) {           
             let pureJSONString = trimComment(list[i])
-            console.log(start, end, pureJSONString, list[i]) 
             let jsonData = JSON.parse(pureJSONString)
             return convertWork(jsonData.firstscreen.defaultWork)
         }

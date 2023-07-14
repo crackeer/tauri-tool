@@ -105,14 +105,19 @@ class App extends React.Component {
             Message.error('Please input work JSON')
             return
         }
-        let dir = this.state.saveDir + "/" + this.state.saveName
-        let data = await invoke.addDownloadWorkTask(dir, this.state.workJSON)
+        const {join} = await import('@tauri-apps/api/path');
+        let realPath = await join(this.state.saveDir, this.state.saveName);
+        let dd = await invoke.fileExists(realPath)
+        if(dd) {
+            Message.info('该VR已下载，或者已在下载列表,请换')
+            return
+        }
+        let data = await invoke.addDownloadWorkTask(realPath, this.state.workJSON)
         if (data.state == "failure") {
             Message.error(data.message)
             return
         }
-        console.log(data);
-        await cache.addVRFiles([dir])
+        await cache.addVRFiles([realPath])
         await this.getVRFiles()
         this.setState({
             visible: false,
