@@ -2,7 +2,7 @@ use crate::util::file;
 use reqwest;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::fs::{self, File};
+use std::fs::{self};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use tokio;

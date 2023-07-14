@@ -66,3 +66,16 @@ pub fn extract_zip(zip_file: &str, dir: &str) -> Result<(), String>{
     }
     Ok(())
 }
+
+
+pub async fn download_text(url: &str) -> Result<String, String> {
+    let result =  reqwest::get(url).await;
+    if let Err(err) = result {
+        return Err(err.to_string());
+    }
+
+    match result {
+        Ok(res) => Ok(res.text().await.unwrap()),
+        Err(err) => Err(err.to_string()),
+    }
+}

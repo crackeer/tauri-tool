@@ -1,6 +1,5 @@
 use crate::util::file;
 use base64::{engine::general_purpose, Engine as _};
-use flate2::read::GzDecoder;
 use reqwest;
 use rust_embed::RustEmbed;
 use serde::{Deserialize, Serialize};

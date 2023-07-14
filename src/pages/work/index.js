@@ -4,10 +4,13 @@ import { open } from '@tauri-apps/api/dialog';
 import cache from '@/util/cache';
 import invoke from '@/util/invoke'
 import common from '@/util/common'
+import work from '@/util/work'
 import api from '@/util/api'
 import { IconFolder, IconDelete, IconLoading } from '@arco-design/web-react/icon';
-import { Card, Avatar, Link, Typography, Space, Row } from '@arco-design/web-react';
+import { Card, Avatar, Link, Typography, Space, Grid } from '@arco-design/web-react';
 import { open as ShellOpen } from '@tauri-apps/api/shell';
+const Row = Grid.Row;
+const Col = Grid.Col;
 
 class App extends React.Component {
     timer = null
@@ -17,6 +20,7 @@ class App extends React.Component {
             visible: false,
             saveName: "",
             workJSON: "",
+            vrURL: "",
             saveDir: "",
             files: [],
             runningTask: {},
@@ -29,18 +33,18 @@ class App extends React.Component {
     }
     ifDownloadNew = async () => {
         let vrCode = common.getQuery('vr_code', '')
-        if(vrCode.length < 1) {
+        if (vrCode.length < 1) {
             return
         }
         let result = await api.getWorkJSON(vrCode)
-        if(result.code != 0) {
+        if (result.code != 0) {
             Message.error(result.status)
             return
         }
         await this.setState({
-            visible : true,
-            saveName : vrCode,
-            workJSON : JSON.stringify(result.data),
+            visible: true,
+            saveName: vrCode,
+            workJSON: JSON.stringify(result.data),
         })
     }
     getVRFiles = async () => {
@@ -88,11 +92,11 @@ class App extends React.Component {
         await ShellOpen(item.file)
     }
     addDownloadTask = async () => {
-        if(this.state.saveDir.length < 1) {
+        if (this.state.saveDir.length < 1) {
             Message.error('Please select download directory')
             return
         }
-        if(this.state.saveName.length < 1) {
+        if (this.state.saveName.length < 1) {
             Message.error('Please input download name')
             return
         }
@@ -110,9 +114,9 @@ class App extends React.Component {
         await cache.addVRFiles([dir])
         await this.getVRFiles()
         this.setState({
-            visible : false,
-            saveName : '',
-            workJSON : ''
+            visible: false,
+            saveName: '',
+            workJSON: ''
         })
     }
     queryTaskState = async () => {
@@ -126,6 +130,18 @@ class App extends React.Component {
     previewVR = async (file) => {
         await ShellOpen(file + '/preview/index.html')
     }
+    parseWorkJSON = async () => {
+        if(this.state.vrURL.length < 1) {
+            Message.error('请输入VR链接')
+            return
+        }
+        let data = await invoke.parseJSCode(this.state.vrURL)
+       // console.log(JSON.stringify(data))
+        let workJSON = work.getWorkJSONFromJSCodeList(data)
+        await this.setState({
+            workJSON : JSON.stringify(workJSON)
+        })
+    }
 
     render() {
         return (
@@ -135,7 +151,7 @@ class App extends React.Component {
                         <span className='list-demo-actions-icon' onClick={() => {
                             this.previewVR(item.file);
                         }}>
-                           VR预览
+                            VR预览
                         </span>,
                         <span className='list-demo-actions-icon' onClick={() => {
                             this.toDelete(item);
@@ -158,16 +174,21 @@ class App extends React.Component {
                     onCancel={() => {
                         this.setState({ visible: false })
                     }}
-                    style={{ width: '55%' }}
+                    style={{ width: '65%' }}
                     onOk={this.addDownloadTask}
                 >
                     <p>下载目录:</p>
                     <Input.Search value={this.state.saveDir} onChange={(val) => { this.setState({ saveDir: val }) }} searchButton={
                         "选择目录"
                     } defaultValue={this.state.saveDir} placeholder='请选择目录' onSearch={this.selectDirectory} />
-                    <p>名称:</p>
+                    <p>VR名称:</p>
                     <Input value={this.state.saveName} onChange={(val) => { this.setState({ saveName: val }) }} />
-                    <p>WorkJSON:</p>
+                    <p>work.json数据:</p>
+                    <p>
+                    <Input.Search value={this.state.vrURL} onChange={(val) => { this.setState({ vrURL: val }) }} searchButton={
+                        "解析"
+                    } defaultValue={this.state.vrURL} placeholder='解析vr链接获取workjson，请输入vr链接' onSearch={this.parseWorkJSON} />
+                    </p>
                     <Input.TextArea value={this.state.workJSON} onChange={(val) => { this.setState({ workJSON: val }) }} rows={6}></Input.TextArea>
                 </Modal>
             </div>
@@ -176,21 +197,21 @@ class App extends React.Component {
 }
 
 const TaskState = (props) => {
-    if(props.data.state == 'success') {
+    if (props.data.state == 'success') {
         return <>下载成功</>
     }
-    if(props.data.state == 'failure') {
+    if (props.data.state == 'failure') {
         return <>下载失败，{props.data.message}</>
     }
 
-    if(props.data.state == 'running') {
+    if (props.data.state == 'running') {
         if (props.data.percent > 0) {
-            return <>下载中<Progress percent={props.data.percent }  /></>
+            return <>下载中<Progress percent={props.data.percent} /></>
         }
-        return <>下载中</> 
+        return <>下载中</>
     }
 
-    if(props.data.state == 'waiting') {
+    if (props.data.state == 'waiting') {
         return <>等待下载</>
     }
     return <>{props.state}</>
