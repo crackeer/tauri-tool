@@ -1,9 +1,5 @@
-var getJSON = (line) => {
-    let start = line.indexOf("{")
-   // console.log(line)
-    let jsonData = JSON.parse(line.substr(start -1))
-    return convertWork(jsonData.work)
-}
+import invoke from './invoke'
+
 
 var convertWork = (work) => {
     let retData = {
@@ -63,23 +59,73 @@ var parseModel = (work, baseURL) => {
 }
 
 
-var getWorkJSONFromJSCodeList = (list) => {
+// js_code from: http://realsee.com
+var getWorkJSONFromJSCodeList1 = (list) => {
+    let getJSON = (line) => {
+        let start = line.indexOf("{")
+       // console.log(line)
+        return JSON.parse(line.substr(start -1))
+       
+    }
     for(var i in list) {
-        console.log(list[i])
         if(list[i].indexOf('work_code') > -1) {
             let parts = list[i].trim().split(';;');
             for(var j in parts) {
                 if(parts[j].indexOf('__module__data') > -1) {
-                    return getJSON(parts[j])
+                    let jsonData = getJSON(parts[j])
+                    return convertWork(jsonData.work)
                 }
             }
         }
     }
+    return ''
+}
+
+// js_code from: http://open.realsee.com
+var getWorkJSONFromJSCodeList2 = (list) => {
+    for(var i in list) {
+        if(list[i].indexOf('houseInfo') > -1) {
+            let line = list[i]
+            let start = list[i].indexOf('&lt;!-')
+            let end = list[i].indexOf('--&gt;')
+           
+            let pureJSONString = list[i].substring(start + 7, end)
+            console.log(start, end, pureJSONString, list[i]) 
+            let jsonData = JSON.parse(pureJSONString)
+            return convertWork(jsonData.firstscreen.defaultWork)
+        }
+    }
+    return ''
+}
+
+var isOpenRealsee = (url) => {
+    return url.indexOf('http://open.realsee.com') > -1 || url.indexOf('https://open.realsee.com') > -1
+}
+
+var isRealsee = (url) => {
+    return url.indexOf('http://realsee.com') > -1 || url.indexOf('https://realsee.com') > -1
+}
+
+
+var getWorkJSONByURL = async (url) => {
+    let jsCode = await invoke.parseJSCode(url)
+    if(jsCode.length < 1) {
+        return ''
+    }
+    if(isRealsee(url)) {
+        return getWorkJSONFromJSCodeList1(jsCode)
+    }
+
+    if(isOpenRealsee(url)) {
+        return getWorkJSONFromJSCodeList2(jsCode)
+    }
+
+    return ''
 }
 
 export default {
-    getWorkJSONFromJSCodeList
+    getWorkJSONByURL
 }
 export {
-    getWorkJSONFromJSCodeList
+    getWorkJSONByURL
 }

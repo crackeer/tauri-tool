@@ -135,9 +135,9 @@ class App extends React.Component {
             Message.error('请输入VR链接')
             return
         }
-        let data = await invoke.parseJSCode(this.state.vrURL)
+        //let data = await invoke.parseJSCode(this.state.vrURL)
        // console.log(JSON.stringify(data))
-        let workJSON = work.getWorkJSONFromJSCodeList(data)
+        let workJSON = await work.getWorkJSONByURL(this.state.vrURL)
         await this.setState({
             workJSON : JSON.stringify(workJSON)
         })
