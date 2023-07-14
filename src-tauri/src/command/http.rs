@@ -21,3 +21,20 @@ pub async fn parse_js_code(url: String) -> Vec<String> {
     }
     list
 }
+
+#[tauri::command]
+pub async fn parse_html_title(url: String) -> String {
+    let result = file::download_text(&url).await;
+    if let Err(_err) = result {
+        return String::from("");
+    }
+    let html = result.unwrap();
+   
+    let document = Html::parse_document(&html);
+    let script_selector = Selector::parse("title").unwrap();
+
+    for script in document.select(&script_selector) {
+        return  script.inner_html();
+    }
+    String::from("")
+}

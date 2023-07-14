@@ -239,16 +239,16 @@ const updateVRFileLocalConfig = async (value) => {
 
 const getWorkJSON = async (vrCode) => {
     let accessToken = await getAccessToken()
-    if(accessToken == null || accessToken.access_token == undefined) {
+    if (accessToken == null || accessToken.access_token == undefined) {
         return {
-            code : -1,
-            status : 'get access_token failed'
+            code: -1,
+            status: 'get access_token failed'
         }
     }
     let result = await get('/open/v1/entity/vr', {
-        vr_code : vrCode
+        vr_code: vrCode
     }, {
-        Authorization : accessToken.access_token
+        Authorization: accessToken.access_token
     })
     return result
 }
@@ -259,11 +259,17 @@ const shutdownNuc = async () => {
     return result
 }
 
+const getVRPageInitData = async (query) => {
+    let result = await get('https://realsee.cn/api/getPageInitData', query)
+    return result
+}
+
+
 export default {
-    getTFState, getTFProjects, getTFImportLog, getTFVRFileList, queryVrapi, queryVrapiV2, queryShepherd, decodeWorkCode, getAccessToken, getNucSystemInfo, setNucTime, updateVrTaskGlobalParams, updateVRFileLocalConfig, getWorkJSON,shutdownNuc
+    getTFState, getTFProjects, getTFImportLog, getTFVRFileList, queryVrapi, queryVrapiV2, queryShepherd, decodeWorkCode, getAccessToken, getNucSystemInfo, setNucTime, updateVrTaskGlobalParams, updateVRFileLocalConfig, getWorkJSON, shutdownNuc, getVRPageInitData
 }
 
 export {
     getTFState, getTFProjects, getTFImportLog, getTFVRFileList, queryVrapi, queryVrapiV2, queryShepherd, decodeWorkCode, getAccessToken, getNucSystemInfo,
-    setNucTime, updateVrTaskGlobalParams, updateVRFileLocalConfig, getWorkJSON, shutdownNuc
+    setNucTime, updateVrTaskGlobalParams, updateVRFileLocalConfig, getWorkJSON, shutdownNuc, getVRPageInitData
 }

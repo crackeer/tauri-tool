@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Table, Modal, List, Input, Message, Progress } from '@arco-design/web-react';
+import { Button, Table, Modal, List, Input, Message, Progress, Divider, Radio } from '@arco-design/web-react';
 import { open } from '@tauri-apps/api/dialog';
 import cache from '@/util/cache';
 import invoke from '@/util/invoke'
@@ -11,6 +11,7 @@ import { Card, Avatar, Link, Typography, Space, Grid } from '@arco-design/web-re
 import { open as ShellOpen } from '@tauri-apps/api/shell';
 const Row = Grid.Row;
 const Col = Grid.Col;
+const RadioGroup = Radio.Group;
 
 class App extends React.Component {
     timer = null
@@ -131,15 +132,21 @@ class App extends React.Component {
         await ShellOpen(file + '/preview/index.html')
     }
     parseWorkJSON = async () => {
-        if(this.state.vrURL.length < 1) {
+        if (this.state.vrURL.length < 1) {
             Message.error('请输入VR链接')
             return
         }
         //let data = await invoke.parseJSCode(this.state.vrURL)
-       // console.log(JSON.stringify(data))
+        // console.log(JSON.stringify(data))
         let workJSON = await work.getWorkJSONByURL(this.state.vrURL)
+        if(workJSON == null) {
+            Message.error('解析work.json失败')
+            return
+        }
+        let htmlTitle = await invoke.parseHTMLTitle(this.state.vrURL)
         await this.setState({
-            workJSON : JSON.stringify(workJSON)
+            workJSON: JSON.stringify(workJSON),
+            saveName : htmlTitle
         })
     }
 
@@ -177,18 +184,19 @@ class App extends React.Component {
                     style={{ width: '65%' }}
                     onOk={this.addDownloadTask}
                 >
-                    <p>下载目录:</p>
+                    <p><strong>下载目录:</strong></p>
                     <Input.Search value={this.state.saveDir} onChange={(val) => { this.setState({ saveDir: val }) }} searchButton={
                         "选择目录"
                     } defaultValue={this.state.saveDir} placeholder='请选择目录' onSearch={this.selectDirectory} />
-                    <p>VR名称:</p>
+
+                    <Card style={{marginTop:'10px'}} title="输入URL获取work.json" size='small'>
+                        <Input.Search value={this.state.vrURL} onChange={(val) => { this.setState({ vrURL: val }) }} searchButton={
+                            "解析"
+                        } defaultValue={this.state.vrURL} placeholder='请输入vr链接' onSearch={this.parseWorkJSON} />
+                    </Card>
+                    <p><strong>VR名称:</strong></p>
                     <Input value={this.state.saveName} onChange={(val) => { this.setState({ saveName: val }) }} />
-                    <p>work.json数据:</p>
-                    <p>
-                    <Input.Search value={this.state.vrURL} onChange={(val) => { this.setState({ vrURL: val }) }} searchButton={
-                        "解析"
-                    } defaultValue={this.state.vrURL} placeholder='解析vr链接获取workjson，请输入vr链接' onSearch={this.parseWorkJSON} />
-                    </p>
+                    <p><strong>work.json:</strong></p>
                     <Input.TextArea value={this.state.workJSON} onChange={(val) => { this.setState({ workJSON: val }) }} rows={6}></Input.TextArea>
                 </Modal>
             </div>

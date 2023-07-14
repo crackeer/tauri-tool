@@ -17,7 +17,7 @@ use command::work::{
 use command::project::{
     add_project_download_task, query_project_download_state
 };
-use command::http::parse_js_code;
+use command::http::{parse_js_code, parse_html_title};
 use tauri::{CustomMenuItem, Menu, MenuItem, Submenu};
 use tauri::{Window, WindowMenuEvent};
 
@@ -52,7 +52,8 @@ fn main() {
             query_all_task_state,
             add_project_download_task, 
             query_project_download_state,
-            parse_js_code
+            parse_js_code,
+            parse_html_title
         ])
         .menu(menu)
         .on_menu_event(window_menu_event)

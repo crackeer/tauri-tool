@@ -1,5 +1,5 @@
 import invoke from './invoke'
-
+import api from './api'
 
 var convertWork = (work) => {
     let retData = {
@@ -44,7 +44,6 @@ var parsePanorama = (work, baseURL) => {
 
 var parseModel = (work, baseURL) => {
     let model = work.model
-    console.log(model)
     let material_textures = []
     for(var i in model.material_textures) {
         material_textures.push(model.material_textures[i].substr(model.material_base_url.length))
@@ -78,21 +77,39 @@ var getWorkJSONFromJSCodeList1 = (list) => {
             }
         }
     }
-    return ''
+    return null
+}
+
+var trimComment = (str) => {
+    let start = str.indexOf('&lt;!-')
+    let end = str.indexOf('--&gt;')
+   
+    return str.substring(start + 7, end)
 }
 
 // js_code from: http://open.realsee.com
 var getWorkJSONFromJSCodeList2 = (list) => {
     for(var i in list) {
-        if(list[i].indexOf('houseInfo') > -1) {
-            let line = list[i]
-            let start = list[i].indexOf('&lt;!-')
-            let end = list[i].indexOf('--&gt;')
-           
-            let pureJSONString = list[i].substring(start + 7, end)
+        if(list[i].indexOf('houseInfo') > -1) {           
+            let pureJSONString = trimComment(list[i])
             console.log(start, end, pureJSONString, list[i]) 
             let jsonData = JSON.parse(pureJSONString)
             return convertWork(jsonData.firstscreen.defaultWork)
+        }
+    }
+    return null
+}
+
+// js_code from: https://realsee.cn
+var getWorkJSONFromJSCodeList3 = async (list) => {
+    for(var i in list) {
+        if(list[i].indexOf('resource_code') > -1) {           
+            let pureJSONString = trimComment(list[i])
+            let jsonData = JSON.parse(pureJSONString)
+            let pageInitData = await api.getVRPageInitData(jsonData)
+            if(pageInitData.data != undefined && pageInitData.data.work != undefined) {
+                return  pageInitData.data.work
+            }
         }
     }
     return ''
@@ -104,6 +121,10 @@ var isOpenRealsee = (url) => {
 
 var isRealsee = (url) => {
     return url.indexOf('http://realsee.com') > -1 || url.indexOf('https://realsee.com') > -1
+}
+
+var isRealseeCN = (url) => {
+    return url.indexOf('http://realsee.cn') > -1 || url.indexOf('https://realsee.cn') > -1
 }
 
 
@@ -118,6 +139,10 @@ var getWorkJSONByURL = async (url) => {
 
     if(isOpenRealsee(url)) {
         return getWorkJSONFromJSCodeList2(jsCode)
+    }
+
+    if(isRealseeCN(url)) {
+        return getWorkJSONFromJSCodeList3(jsCode)
     }
 
     return ''

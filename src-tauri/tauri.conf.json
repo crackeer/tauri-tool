@@ -21,7 +21,7 @@
             },
             "http": {
                 "all": true,
-                "scope": ["http://10.11.1.3/*"],
+                "scope": ["http://10.11.1.3/*", "https://realsee.cn/*"],
                 "request": true
             },
             "protocol": {
