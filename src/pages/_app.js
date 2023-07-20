@@ -16,6 +16,7 @@ const MenuList = [
     {'key' : 'nuc_tf', 'icon' : <IconScan />, 'href': '/nuc/tf', 'title': 'TF卡'},
     {'key' : 'work', 'icon' : <IconCloudDownload />, 'href': '/work', 'title': 'VR下载'},
     {'key' : 'nuc_project_download', 'icon' : <IconStrikethrough  />, 'href': '/nuc/project/download', 'title': '项目下载'},
+    {'key' : 'nuc_hacker', 'icon' : <IconStrikethrough  />, 'href': '/nuc/hacker', 'title': 'Hacker'},
 ]
 
 function getMarginLeft(value) {

@@ -8,6 +8,7 @@ const VRDir = "VRDir"
 const VRFiles = "VRFiles"
 const Project = "Project"
 const ProjectSaveDir = "ProjectSaveDir"
+const CacheHost = "CacheHost"
 
 var get = async (key) => {
     try {
@@ -139,6 +140,22 @@ var setProjectSaveDir = async (dir) => {
     await set(ProjectSaveDir, dir +'')
 }
 
+var getCacheHost = async () => {
+    let raws = await get(CacheHost)
+    try {
+        return JSON.parse(raws)
+    } catch(e) {
+        return {
+            host : '',
+            privateKey : ''
+        }
+    }
+}
+
+var setCacheHost = async (data) => {
+    await set(CacheHost, JSON.stringify(data))
+}
+
 export default {
     getMenuCollapsed,
     setMenuCollapsed, 
@@ -154,5 +171,7 @@ export default {
     deleteProject,
     getProject,
     getProjectSaveDir,
-    setProjectSaveDir
+    setProjectSaveDir,
+    getCacheHost,
+    setCacheHost
 }
