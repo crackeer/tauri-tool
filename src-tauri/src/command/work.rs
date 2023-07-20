@@ -516,7 +516,7 @@ async fn download_work_from_task_list() -> Result<String, String> {
             dir.clone(),
             TaskState {
                 state: "running".to_string(),
-                percent: 10,
+                percent: 0,
                 message: "".to_string(),
             },
         );

@@ -235,7 +235,6 @@ pub async fn add_project_download_task(
     project_id: String,
     db_version: String,
 ) -> TaskState {
-    println!("{},{},{}", project_id, db_version, dir);
     add_task(Task {
         project_id: project_id.clone(),
         db_version: db_version.clone(),
@@ -251,7 +250,7 @@ pub async fn add_project_download_task(
     );
 
     if !is_running() {
-        tokio::spawn(download_projects_from_task_list());
+        tokio::spawn(download_project_from_task_list());
     }
 
     return TaskState {
@@ -261,7 +260,7 @@ pub async fn add_project_download_task(
     };
 }
 
-async fn download_projects_from_task_list() -> Result<String, String> {
+async fn download_project_from_task_list() -> Result<String, String> {
     set_running(1);
     loop {
         let task_result = get_task();
@@ -273,7 +272,7 @@ async fn download_projects_from_task_list() -> Result<String, String> {
             task.directory.clone(),
             TaskState {
                 state: "running".to_string(),
-                percent: 1,
+                percent: 0,
                 message: "".to_string(),
             },
         );
@@ -305,6 +304,7 @@ async fn download_projects_from_task_list() -> Result<String, String> {
     set_running(0);
     Ok("Ok".to_string())
 }
+
 #[tauri::command]
 pub async fn query_project_download_state() -> HashMap<String, TaskState> {
     get_task_state()
