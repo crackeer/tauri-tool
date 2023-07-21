@@ -18,7 +18,7 @@ use command::project::{
     add_project_download_task, query_project_download_state
 };
 use command::ssh::{
-    get_local_config, 
+    get_local_config, update_outer_host
 };
 
 use command::http::{parse_js_code, parse_html_title};
@@ -58,7 +58,8 @@ fn main() {
             query_project_download_state,
             parse_js_code,
             parse_html_title,
-            get_local_config
+            get_local_config,
+            update_outer_host
         ])
         .menu(menu)
         .on_menu_event(window_menu_event)

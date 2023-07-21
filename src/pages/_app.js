@@ -7,15 +7,19 @@ import cache from '@/util/cache';
 const Sider = Layout.Sider;
 const MenuItem = Menu.Item;
 
+// const MenuList = [
+//     {'key' : 'main', 'icon' : <IconHome /> , 'href': '/', 'title': '主页'},
+//     {'key' : 'file', 'icon' : <IconCodeSquare /> , 'href': '/file', 'title': '文件'},
+//     {'key' : 'nuc_system', 'icon' : <IconHighlight />, 'href': '/nuc/system', 'title': '主机'},
+//     {'key' : 'nuc_project', 'icon' : <IconSelectAll />, 'href': '/nuc/project', 'title': '主机项目'},
+//     {'key' : 'nuc_task', 'icon' : <IconSend />, 'href': '/nuc/task', 'title': '主机任务'},
+//     {'key' : 'nuc_tf', 'icon' : <IconScan />, 'href': '/nuc/tf', 'title': 'TF卡'},
+//     {'key' : 'work', 'icon' : <IconCloudDownload />, 'href': '/work', 'title': 'VR下载'},
+//     {'key' : 'nuc_project_download', 'icon' : <IconStrikethrough  />, 'href': '/nuc/project/download', 'title': '项目下载'},
+//     {'key' : 'nuc_hacker', 'icon' : <IconStrikethrough  />, 'href': '/nuc/hacker', 'title': 'Hacker'},
+// ]
 const MenuList = [
-    {'key' : 'main', 'icon' : <IconHome /> , 'href': '/', 'title': '主页'},
-    {'key' : 'file', 'icon' : <IconCodeSquare /> , 'href': '/file', 'title': '文件'},
     {'key' : 'nuc_system', 'icon' : <IconHighlight />, 'href': '/nuc/system', 'title': '主机'},
-    {'key' : 'nuc_project', 'icon' : <IconSelectAll />, 'href': '/nuc/project', 'title': '主机项目'},
-    {'key' : 'nuc_task', 'icon' : <IconSend />, 'href': '/nuc/task', 'title': '主机任务'},
-    {'key' : 'nuc_tf', 'icon' : <IconScan />, 'href': '/nuc/tf', 'title': 'TF卡'},
-    {'key' : 'work', 'icon' : <IconCloudDownload />, 'href': '/work', 'title': 'VR下载'},
-    {'key' : 'nuc_project_download', 'icon' : <IconStrikethrough  />, 'href': '/nuc/project/download', 'title': '项目下载'},
     {'key' : 'nuc_hacker', 'icon' : <IconStrikethrough  />, 'href': '/nuc/hacker', 'title': 'Hacker'},
 ]
 

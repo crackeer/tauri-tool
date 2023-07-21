@@ -146,10 +146,17 @@ var splitMySQLLine = (dataString) => {
     return parts
 }
 
+var updateOuterHost = async (host, privateKey, oldHost, newHost) => {
+    let result = await invoke('update_outer_host', {
+        host, privateKey, oldHost, newHost
+    })
+    return result
+}
+
 export {
-    writeFile, readFile, readDir, simpleReadDir, setWindowTitle, uploadFile, createFile, createDir, deleteFile, deleteFolder, renameFile, fileExists, addDownloadWorkTask, queryDownloadTask, addProjectDownload, queryProjectDownloadTask, parseJSCode, parseHTMLTitle, getLocalConfig
+    writeFile, readFile, readDir, simpleReadDir, setWindowTitle, uploadFile, createFile, createDir, deleteFile, deleteFolder, renameFile, fileExists, addDownloadWorkTask, queryDownloadTask, addProjectDownload, queryProjectDownloadTask, parseJSCode, parseHTMLTitle, getLocalConfig, updateOuterHost
 }
 
 export default {
-    writeFile, readFile, readDir, simpleReadDir, setWindowTitle, uploadFile, createFile, createDir, deleteFile, deleteFolder, renameFile, fileExists, addDownloadWorkTask, queryDownloadTask, addProjectDownload, queryProjectDownloadTask, parseJSCode, parseHTMLTitle, getLocalConfig
+    writeFile, readFile, readDir, simpleReadDir, setWindowTitle, uploadFile, createFile, createDir, deleteFile, deleteFolder, renameFile, fileExists, addDownloadWorkTask, queryDownloadTask, addProjectDownload, queryProjectDownloadTask, parseJSCode, parseHTMLTitle, getLocalConfig, updateOuterHost
 }
