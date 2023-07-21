@@ -11,6 +11,7 @@ import { message } from 'antd';
 const Row = Grid.Row;
 const Col = Grid.Col;
 const FormItem = Form.Item;
+import { open } from '@tauri-apps/api/dialog';
 
 function validateIP(input) {
     var regex = /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$/;
@@ -24,7 +25,7 @@ class App extends React.Component {
             editing: false,
             host: "",
 
-            privateKey: "",
+            privateKeyPath: "",
             localConfig: {},
             oldOuterHost: '',
             newOuterHost: '',
@@ -38,7 +39,7 @@ class App extends React.Component {
     doSaveCacheHost = async () => {
         await cache.setCacheHost({
             host: this.state.host,
-            privateKey: this.state.privateKey,
+            privateKeyPath: this.state.privateKeyPath,
         })
         await this.setState({
             editing: false
@@ -46,11 +47,11 @@ class App extends React.Component {
         Message.success("保存成功")
     }
     getLocalConfig = async () => {
-        if (this.state.host.length < 1 || this.state.privateKey.length < 1) {
+        if (this.state.host.length < 1 || this.state.privateKeyPath.length < 1) {
             Message.error("内网IP和密钥必填")
             return
         }
-        let data = await invoke.getLocalConfig(this.state.host, this.state.privateKey)
+        let data = await invoke.getLocalConfig(this.state.host, this.state.privateKeyPath)
         try {
             let config = JSON.parse(data[0])
             let downloadHost = config['download_host']
@@ -77,10 +78,26 @@ class App extends React.Component {
             return
         }
 
-        let result = invoke.updateOuterHost(this.state.host, this.state.privateKey, this.state.oldOuterHost, this.state.newOuterHost)
+        let result = invoke.updateOuterHost(this.state.host, this.state.privateKeyPath, this.state.oldOuterHost, this.state.newOuterHost)
         Message.info("更新成功")
         setTimeout(this.getLocalConfig, 1000)
         
+    }
+    selectPrivateKeyPath = async () => {
+        let selected = await open({
+            directory: false,
+            multiple: false,
+            filters: [{
+                name: 'File',
+                extensions: ['txt']
+            }],
+        });
+        if(selected == null || selected.length < 1) {
+            return
+        }
+        this.setState({
+            privateKeyPath : selected
+        })
     }
 
 
@@ -95,10 +112,9 @@ class App extends React.Component {
                                     this.setState({ host: val })
                                 }} value={this.state.host} />
                             </FormItem>
-                            <FormItem label='密钥'>
-                                <Input.TextArea placeholder='请填写密钥内容' rows={4} onChange={(val) => {
-                                    this.setState({ privateKey: val })
-                                }} value={this.state.privateKey}></Input.TextArea>
+                            <FormItem label='密钥地址'>
+                               {this.state.privateKeyPath}
+                               <Button onClick={this.selectPrivateKeyPath}>Select</Button>
                             </FormItem>
                             <FormItem wrapperCol={{ offset: 5 }}>
                                 <Button type='primary' onClick={this.doSaveCacheHost}>保存该配置</Button>

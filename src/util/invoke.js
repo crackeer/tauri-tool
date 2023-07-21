@@ -133,9 +133,9 @@ var parseHTMLTitle = async (url) => {
     return result
 }
 
-var getLocalConfig = async (host, privateKey) => {
+var getLocalConfig = async (host, privateKeyPath) => {
     let result = await invoke('get_local_config', {
-        host, privateKey
+        host, privateKeyPath
     })
     return splitMySQLLine(result)
 }
@@ -146,9 +146,9 @@ var splitMySQLLine = (dataString) => {
     return parts
 }
 
-var updateOuterHost = async (host, privateKey, oldHost, newHost) => {
+var updateOuterHost = async (host, privateKeyPath, oldHost, newHost) => {
     let result = await invoke('update_outer_host', {
-        host, privateKey, oldHost, newHost
+        host, privateKeyPath, oldHost, newHost
     })
     return result
 }
