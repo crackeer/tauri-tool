@@ -30,7 +30,8 @@ class App extends React.Component {
             oldOuterHost: '',
             newOuterHost: '',
 
-            directory: '/root'
+            directory: '/root',
+            files : [],
         }
     }
     async componentDidMount() {
@@ -109,7 +110,30 @@ class App extends React.Component {
     listFiles = async () => {
         let result = await invoke.listFiles(this.state.host, this.state.privateKeyPath, this.state.directory)
         console.log(result)
+        if(!result.success) {
+            Message.error(result.message)
+            return
+        }
+        result.data.sort((a, b) => {
+            if(a.is_dir) {
+                return -1
+            }
+            return 1
+        })
 
+        await this.setState({
+            files: result.data,
+        })
+
+    }
+    selectDir = async (name) => {
+        const {join} = await import('@tauri-apps/api/path');
+        let dir = await join(this.state.directory, name)
+        await this.setState({
+            directory: dir,
+            files : [],
+        })
+        setTimeout(this.listFiles, 100)
     }
 
 
@@ -154,6 +178,17 @@ class App extends React.Component {
                         </Card>
                         <Card title={<>Directory: {this.state.directory}</>} style={{marginTop:'10px'}}>
                             <Button onClick={this.listFiles} type='primary'>更新</Button>
+
+                            <Space>
+                                {
+                                    this.state.files.map(item => {
+                                        if(item.is_dir) {
+                                            return <a href="javascript:;" onClick={this.selectDir.bind(this, item.name)}>{item.name}</a>
+                                        }
+                                        return <Tag>{item.name}</Tag>
+                                    })
+                                }
+                            </Space>
                         </Card>
                     </Card>
                 </Col>

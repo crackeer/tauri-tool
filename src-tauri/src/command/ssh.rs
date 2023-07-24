@@ -4,6 +4,7 @@ use ssh2::Session;
 use std::io::prelude::*;
 use std::net::TcpStream;
 use std::path::Path;
+use serde::{Deserialize, Serialize};
 
 fn get_ssh_session(host: &str, private_key_path: &str) -> Result<Session, String> {
     let connection = TcpStream::connect(format!("{}:22", host));
@@ -90,6 +91,33 @@ pub async fn update_outer_host(
     result
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct File {
+    access: String,
+    group: String,
+    user: String,
+    size: String,
+    month: String,
+    day: String,
+    time: String,
+    name: String,
+    is_dir: bool,
+}
+
+/*
+-rw-------. 1 roo roo 2897 Jun 16 15:20 anaconda-ks.cfg
+drwxrwxr-x 13 501 games 4096 Jul 20 15:54 download
+-rw-r--r-- 1 roo roo 1024507392 Jul 20 15:57 download. ar
+-rw-r--r--. 1 roo roo 2723 Jun 16 15:19 ini .log
+-rw-r--r--. 1 roo roo 16108 Jun 16 15:20 ks-pos .log
+-rw-------. 1 roo roo 2832 Jun 16 15:20 original-ks.cfg
+drwx------ 4 501 games 4096 Jan 29 17:17 projec -src
+-rw-r--r-- 1 roo roo 48936960 Jul 7 14:53 realsee-open-admin. ar
+-rw-r--r-- 1 roo roo 77155328 Jul 6 18:20 realsee-open-svc. ar
+-rw-r--r-- 1 roo roo 67422720 Jul 7 15:23 realsee-shepherd-alg. ar
+-rw-r--r-- 1 roo roo 67352576 Jun 27 17:59 realsee-shepherd-svc. ar
+-rw-r--r-- 1 roo roo 706563 Jun 19 14:33 realsee-vr-local.2.3.0-5cf4997-nuc. ar.gz
+*/
 #[tauri::command]
 pub async fn list_files(host: String, private_key_path: String, path: String) -> InvokeResponse {
     let session = get_ssh_session(&host, &private_key_path);
@@ -105,9 +133,29 @@ pub async fn list_files(host: String, private_key_path: String, path: String) ->
     channel.exec(&format!("ls -l {}", path)).unwrap();
     let mut result = String::new();
     _ = channel.read_to_string(&mut result);
+    let list: Vec<&str> = result.split("\n").collect();
+    let mut file_list: Vec<File> = Vec::new();
+    for item in list.iter() {
+        let parts: Vec<&str> = item.split(" ").filter(|x| x.len() > 0).collect();
+        println!("{} - {}", parts.len(), parts.join("T").as_str());
+        if parts.len() < 9 {
+            continue;
+        }
+        file_list.push(File {
+            access: String::from(parts[0]),
+            group: String::from(parts[2]),
+            user: String::from(parts[3]),
+            size: String::from(parts[4]),
+            month: String::from(parts[5]),
+            day: String::from(parts[6]),
+            time: String::from(parts[7]),
+            name: String::from(parts[8]),
+            is_dir: parts[0].starts_with("d"),
+        })
+    }
     InvokeResponse {
         success: true,
         message: "".to_string(),
-        data: json!(result),
+        data: json!(file_list),
     }
 }
