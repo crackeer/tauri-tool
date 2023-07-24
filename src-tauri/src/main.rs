@@ -18,7 +18,7 @@ use command::project::{
     add_project_download_task, query_project_download_state
 };
 use command::ssh::{
-    get_local_config, update_outer_host
+    get_local_config, update_outer_host, list_files
 };
 
 use command::http::{parse_js_code, parse_html_title};
@@ -34,7 +34,8 @@ fn main() {
         Menu::new()
             .add_native_item(MenuItem::Copy)
             .add_native_item(MenuItem::Paste)
-            .add_native_item(MenuItem::Cut),
+            .add_native_item(MenuItem::Cut)
+            .add_native_item(MenuItem::SelectAll),
     );
     let menu = Menu::new().add_submenu(native_menu).add_submenu(submenu);
     //let menu = Menu::os_default(&"sss");
@@ -59,7 +60,8 @@ fn main() {
             parse_js_code,
             parse_html_title,
             get_local_config,
-            update_outer_host
+            update_outer_host,
+            list_files
         ])
         .menu(menu)
         .on_menu_event(window_menu_event)

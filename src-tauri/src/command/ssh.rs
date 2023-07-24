@@ -1,23 +1,45 @@
+use crate::command::base::InvokeResponse;
+use serde_json::json;
 use ssh2::Session;
-use std::fmt::format;
 use std::io::prelude::*;
 use std::net::TcpStream;
 use std::path::Path;
 
-#[tauri::command]
-pub async fn get_local_config(host: String, private_key_path: String) -> String {
-    let tcp = TcpStream::connect(format!("{}:22", host)).unwrap();
-    let mut sess = Session::new().unwrap();
-    sess.set_tcp_stream(tcp);
-    sess.handshake().unwrap();
-    if let Ok(data) = sess.auth_methods(&"root") {
-        println!("{}", data);
+fn get_ssh_session(host: &str, private_key_path: &str) -> Result<Session, String> {
+    let connection = TcpStream::connect(format!("{}:22", host));
+    if let Err(err) = connection {
+        return Err(err.to_string());
     }
 
-    sess.userauth_pubkey_file("root", None, Path::new(&private_key_path), None)
-        .unwrap();
+    let mut session = Session::new().unwrap();
+    session.set_tcp_stream(connection.unwrap());
+    if let Err(err) = session.handshake() {
+        return Err(format!("handshake error:{}", err.to_string()));
+    }
+    if let Err(err) = session.auth_methods(&"root") {
+        return Err(format!("auth root error :{}", err.to_string()));
+    }
 
-    assert!(sess.authenticated());
+    if let Err(err) = session.userauth_pubkey_file("root", None, Path::new(&private_key_path), None)
+    {
+        return Err(format!("userauth_pubkey_file error :{}", err.to_string()));
+    }
+
+    if !session.authenticated() {
+        return Err(String::from("authenticated wrong"));
+    }
+
+    Ok(session)
+}
+
+#[tauri::command]
+pub async fn get_local_config(host: String, private_key_path: String) -> String {
+    let session = get_ssh_session(&host, &private_key_path);
+    if let Err(err) = session {
+        print!("{}", err.to_string());
+        return String::from(err.to_string());
+    }
+    let sess = session.unwrap();
     let mut channel = sess.channel_session().unwrap();
     //channel.exec("docker exec business_mysql3_1 /bin/bash -c \"mysql -uroot -pz_php_root vrapi -e 'select value from strategy where name=\"vrfile\";'\"").unwrap();
     //channel.exec("docker exec business_mysql3_1 /bin/bash -c \"echo 565;\"").unwrap();
@@ -34,15 +56,11 @@ pub async fn update_outer_host(
     old_host: String,
     new_host: String,
 ) -> String {
-    let tcp = TcpStream::connect(format!("{}:22", host)).unwrap();
-    let mut sess = Session::new().unwrap();
-    sess.set_tcp_stream(tcp);
-    sess.handshake().unwrap();
-
-    sess.userauth_pubkey_file("root", None, Path::new(&private_key_path), None)
-        .unwrap();
-
-    assert!(sess.authenticated());
+    let session = get_ssh_session(&host, &private_key_path);
+    if let Err(err) = session {
+        return String::from(err.to_string());
+    }
+    let sess = session.unwrap();
     let mut channel = sess.channel_session().unwrap();
     //channel.exec("docker exec business_mysql3_1 /bin/bash -c \"mysql -uroot -pz_php_root vrapi -e 'select value from strategy where name=\"vrfile\";'\"").unwrap();
     //channel.exec("docker exec business_mysql3_1 /bin/bash -c \"echo 565;\"").unwrap();
@@ -68,6 +86,28 @@ pub async fn update_outer_host(
     println!("{}", exec_cmd);
     channel.exec(&exec_cmd).unwrap();
     let mut result = String::new();
-    channel.read_to_string(&mut result);
+    _ = channel.read_to_string(&mut result);
     result
+}
+
+#[tauri::command]
+pub async fn list_files(host: String, private_key_path: String, path: String) -> InvokeResponse {
+    let session = get_ssh_session(&host, &private_key_path);
+    if let Err(err) = session {
+        return InvokeResponse {
+            success: false,
+            message: err.to_string(),
+            data: json!(null),
+        };
+    }
+    let sess = session.unwrap();
+    let mut channel = sess.channel_session().unwrap();
+    channel.exec(&format!("ls -l {}", path)).unwrap();
+    let mut result = String::new();
+    _ = channel.read_to_string(&mut result);
+    InvokeResponse {
+        success: true,
+        message: "".to_string(),
+        data: json!(result),
+    }
 }

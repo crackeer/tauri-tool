@@ -29,6 +29,8 @@ class App extends React.Component {
             localConfig: {},
             oldOuterHost: '',
             newOuterHost: '',
+
+            directory: '/root'
         }
     }
     async componentDidMount() {
@@ -68,6 +70,10 @@ class App extends React.Component {
     }
 
     doUpdateOuterHost = async () => {
+        if (this.state.oldOuterHost.length < 1) {
+            Message.info("旧外网IP未获取到，请刷新")
+            return
+        }
         if (this.state.newOuterHost.length < 1) {
             Message.info("请填写新的外网IP")
             return
@@ -81,7 +87,7 @@ class App extends React.Component {
         let result = invoke.updateOuterHost(this.state.host, this.state.privateKeyPath, this.state.oldOuterHost, this.state.newOuterHost)
         Message.info("更新成功")
         setTimeout(this.getLocalConfig, 1000)
-        
+
     }
     selectPrivateKeyPath = async () => {
         let selected = await open({
@@ -92,12 +98,18 @@ class App extends React.Component {
                 extensions: ['txt']
             }],
         });
-        if(selected == null || selected.length < 1) {
+        if (selected == null || selected.length < 1) {
             return
         }
         this.setState({
-            privateKeyPath : selected
+            privateKeyPath: selected
         })
+    }
+
+    listFiles = async () => {
+        let result = await invoke.listFiles(this.state.host, this.state.privateKeyPath, this.state.directory)
+        console.log(result)
+
     }
 
 
@@ -113,8 +125,8 @@ class App extends React.Component {
                                 }} value={this.state.host} />
                             </FormItem>
                             <FormItem label='密钥地址'>
-                               {this.state.privateKeyPath}
-                               <Button onClick={this.selectPrivateKeyPath}>Select</Button>
+                                {this.state.privateKeyPath}
+                                <Button onClick={this.selectPrivateKeyPath}>Select</Button>
                             </FormItem>
                             <FormItem wrapperCol={{ offset: 5 }}>
                                 <Button type='primary' onClick={this.doSaveCacheHost}>保存该配置</Button>
@@ -139,6 +151,9 @@ class App extends React.Component {
                                 </Col>
                             </Row>
 
+                        </Card>
+                        <Card title={<>Directory: {this.state.directory}</>} style={{marginTop:'10px'}}>
+                            <Button onClick={this.listFiles} type='primary'>更新</Button>
                         </Card>
                     </Card>
                 </Col>
