@@ -2,8 +2,8 @@ import React from 'react';
 import { open } from '@tauri-apps/api/dialog';
 import { writeText } from '@tauri-apps/api/clipboard';
 import JSONEditor from '@/component/JSONEditor'
-import { Button, Message, Grid, Space, Card, Tag, Empty, Divider, Modal, Form, Input } from '@arco-design/web-react';
-import { IconExclamation, IconLoading, IconEdit, IconRefresh } from '@arco-design/web-react/icon';
+import { Button, Message, Grid, Space, Card, Tag, Link, Divider, Modal, Form, Input, Table } from '@arco-design/web-react';
+import { IconExclamation, IconLoading, IconEdit, IconRefresh, IconObliqueLine } from '@arco-design/web-react/icon';
 import api from '@/util/api';
 import cache from '@/util/cache';
 import invoke from '@/util/invoke';
@@ -18,7 +18,68 @@ function validateIP(input) {
     return regex.test(input);
 }
 
+async function generateQuickDirs(directory) {
+    const { sep } = await import('@tauri-apps/api/path');
+    let parts = directory.split(sep)
+    let list = []
+    for (var i = 0; i < parts.length; i++) {
+        if (parts[i].length > 0) {
+            list.push({
+                path: parts.slice(0, i + 1).join(sep),
+                name: parts[i]
+            })
+        }
+
+    }
+    return list
+}
+
 class App extends React.Component {
+    columns = [
+        {
+            'title': '名字',
+            'dataIndex': 'name',
+            'key': 'name',
+            'render': (col, record, index) => (
+                record.is_dir ? <a href="javascript:;" onClick={this.selectDir.bind(this, record.name)}>{record.name}</a> : <span>{record.name}</span>
+            )
+        },
+        {
+            'title': '权限',
+            'dataIndex': 'access',
+            'key': 'access',
+        },
+        {
+            'title': '时间',
+            'dataIndex': 'time',
+            'key': 'access',
+            'render': (col, record, index) => (
+                <>
+                    {record.month} {record.day} {record.time}
+                </>
+            )
+
+        },
+        {
+            'title': '大小',
+            'dataIndex': 'size',
+            'key': 'size',
+        },
+        {
+            'title': '用户',
+            'dataIndex': 'user',
+            'key': 'user',
+        },
+        {
+            'title': '操作',
+            'key': 'opt',
+            'render': (col, record, index) => {
+                return <Space>
+                    <Button onClick={this.selectDir.bind(this, record)} size="mini">下载</Button>
+                </Space>
+            }
+        }
+    ]
     constructor(props) {
         super(props);
         this.state = {
@@ -30,8 +91,10 @@ class App extends React.Component {
             oldOuterHost: '',
             newOuterHost: '',
 
-            directory: '/root',
-            files : [],
+            directory: '/',
+            quickDirs: [],
+            files: [],
+            fileLoading: false
         }
     }
     async componentDidMount() {
@@ -109,33 +172,46 @@ class App extends React.Component {
 
     listFiles = async () => {
         let result = await invoke.listFiles(this.state.host, this.state.privateKeyPath, this.state.directory)
-        console.log(result)
-        if(!result.success) {
+
+        if (!result.success) {
             Message.error(result.message)
+            await this.setState({
+                fileLoading: false
+            })
             return
         }
         result.data.sort((a, b) => {
-            if(a.is_dir) {
+            if (a.is_dir) {
                 return -1
             }
             return 1
         })
+        let quickDirs = await generateQuickDirs(this.state.directory)
 
         await this.setState({
             files: result.data,
+            quickDirs: quickDirs,
+            fileLoading: false
         })
 
     }
-    selectDir = async (name) => {
-        const {join} = await import('@tauri-apps/api/path');
-        let dir = await join(this.state.directory, name)
+    gotoDir = async (item) => {
         await this.setState({
-            directory: dir,
-            files : [],
+            directory: item.path,
+            files: [],
         })
         setTimeout(this.listFiles, 100)
     }
-
+    selectDir = async (name) => {
+        const { join } = await import('@tauri-apps/api/path');
+        let dir = await join(this.state.directory, name)
+        await this.setState({
+            directory: dir,
+            files: [],
+            fileLoading: true
+        })
+        setTimeout(this.listFiles, 100)
+    }
 
     render() {
         return <>
@@ -176,19 +252,19 @@ class App extends React.Component {
                             </Row>
 
                         </Card>
-                        <Card title={<>Directory: {this.state.directory}</>} style={{marginTop:'10px'}}>
-                            <Button onClick={this.listFiles} type='primary'>更新</Button>
 
-                            <Space>
+                        <Card style={{ marginTop: '20px' }}>
+                            <Space split={<IconObliqueLine />} align={'center'} size={0} style={{ marginRight: '0' }}>
+                                <Link onClick={this.gotoDir.bind(this, { path: '/' })} style={{ fontSize: '20px' }} key={'/'}>根目录</Link>
                                 {
-                                    this.state.files.map(item => {
-                                        if(item.is_dir) {
-                                            return <a href="javascript:;" onClick={this.selectDir.bind(this, item.name)}>{item.name}</a>
-                                        }
-                                        return <Tag>{item.name}</Tag>
+                                    this.state.quickDirs.map(item => {
+                                        return <Link onClick={this.gotoDir.bind(this, item)} style={{ fontSize: '20px' }} key={item.path}>{item.name}</Link>
                                     })
                                 }
                             </Space>
+                            <Button onClick={this.listFiles} type='primary' size='mini'>更新</Button>
+                            <Table data={this.state.files} columns={this.columns} pagination={false} rowKey={'name'}
+                                scroll={{ y: 800 }} border={false} footer={this.state.directory} loading={this.state.fileLoading} />
                         </Card>
                     </Card>
                 </Col>
