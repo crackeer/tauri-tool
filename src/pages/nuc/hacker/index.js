@@ -9,6 +9,7 @@ import cache from '@/util/cache';
 import invoke from '@/util/invoke';
 import dayjs from 'dayjs';
 import { message } from 'antd';
+import { remove } from 'lodash';
 const Row = Grid.Row;
 const Col = Grid.Col;
 const FormItem = Form.Item;
@@ -75,7 +76,7 @@ class App extends React.Component {
             'key': 'opt',
             'render': (col, record, index) => {
                 return <Space>
-                    <Button onClick={this.selectDir.bind(this, record)} size="mini">下载</Button>
+                     <Button onClick={this.downloadRemoteFile.bind(this, record)} size="mini">下载</Button>
                 </Space>
             }
         }
@@ -211,6 +212,52 @@ class App extends React.Component {
             fileLoading: true
         })
         setTimeout(this.listFiles, 100)
+    }
+    downloadRemoteFile = async (record) => {
+        let selected = await open({
+            directory: true,
+            multiple: false,
+            filters: [{
+                name: 'File',
+                extensions: ['txt']
+            }],
+        }); 
+        await this.doDownloadRemoteDir(this.state.directory, record, selected)
+        return
+        const { join } = await import('@tauri-apps/api/path');
+        let localSavePath = await join(selected, record.name)
+        let remoteFile = this.state.directory + "/" + record.name
+        Message.loading({
+            duration : 5000,
+            content : '下载中，请稍后'
+        })
+        let result = await invoke.downloadRemoteFile(this.state.host, this.state.privateKeyPath, remoteFile, localSavePath)
+        if(result.success) {
+            Message.success("下载成功")
+        } else {
+            Message.error('下载失败：' + result.message)
+        }
+    }
+
+    doDownloadRemoteDir = async (currentDir, record, savePath) => {
+        const { join } = await import('@tauri-apps/api/path');
+        let localSavePath = await join(savePath, record.name)
+        let remoteFile = currentDir + "/" + record.name
+        if(!record.is_dir) {
+            let result = await invoke.downloadRemoteFile(this.state.host, this.state.privateKeyPath, remoteFile, localSavePath)
+            if(result.success) {
+                Message.success('下载`' +remoteFile +'`成功`')
+            } else {
+                Message.error('下载' + remoteFile +'失败：' + result.message)
+            }
+            return 
+        }
+        await invoke.createDir(remoteFile)
+        let fileList = await invoke.listFiles(this.state.host, this.state.privateKeyPath, remoteFile)
+        console.log(fileList)
+        for(var i in fileList) {
+            await this.doDownloadRemoteDir(remoteFile, fileList[i], localSavePath)
+        }
     }
 
     render() {

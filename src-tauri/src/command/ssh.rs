@@ -1,10 +1,11 @@
 use crate::command::base::InvokeResponse;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use ssh2::Session;
+use std::fs;
 use std::io::prelude::*;
 use std::net::TcpStream;
 use std::path::Path;
-use serde::{Deserialize, Serialize};
 
 fn get_ssh_session(host: &str, private_key_path: &str) -> Result<Session, String> {
     let connection = TcpStream::connect(format!("{}:22", host));
@@ -157,5 +158,48 @@ pub async fn list_files(host: String, private_key_path: String, path: String) ->
         success: true,
         message: "".to_string(),
         data: json!(file_list),
+    }
+}
+
+#[tauri::command]
+pub async fn download_remote_file(
+    host: String,
+    private_key_path: String,
+    path: String,
+    local_save_path: String,
+) -> InvokeResponse {
+    let session = get_ssh_session(&host, &private_key_path);
+    if let Err(err) = session {
+        return InvokeResponse {
+            success: false,
+            message: err.to_string(),
+            data: json!(null),
+        };
+    }
+    let sess = session.unwrap();
+
+    let (mut remote_file, stat) = sess.scp_recv(Path::new(&path.as_str())).unwrap();
+    println!("remote file size: {}", stat.size());
+    let mut contents = Vec::new();
+    remote_file.read_to_end(&mut contents).unwrap();
+
+
+    // Close the channel and wait for the whole content to be tranferred
+    remote_file.send_eof().unwrap();
+    remote_file.wait_eof().unwrap();
+    remote_file.close().unwrap();
+    remote_file.wait_close().unwrap();
+
+    if let Err(err) = fs::write(local_save_path, &contents) {
+        return  InvokeResponse {
+            success: false,
+            message: err.to_string(),
+            data: json!(null),
+        };
+    }
+    return InvokeResponse {
+        success: true,
+        message: "success".to_string(),
+        data: json!(null),
     }
 }
