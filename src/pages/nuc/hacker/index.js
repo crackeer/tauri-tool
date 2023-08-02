@@ -76,7 +76,7 @@ class App extends React.Component {
             'key': 'opt',
             'render': (col, record, index) => {
                 return <Space>
-                     <Button onClick={this.downloadRemoteFile.bind(this, record)} size="mini">下载</Button>
+                    <Button onClick={this.downloadRemoteFile.bind(this, record)} size="mini" type='text'>下载</Button>
                 </Space>
             }
         }
@@ -221,18 +221,18 @@ class App extends React.Component {
                 name: 'File',
                 extensions: ['txt']
             }],
-        }); 
+        });
         await this.doDownloadRemoteDir(this.state.directory, record, selected)
         return
         const { join } = await import('@tauri-apps/api/path');
         let localSavePath = await join(selected, record.name)
         let remoteFile = this.state.directory + "/" + record.name
         Message.loading({
-            duration : 5000,
-            content : '下载中，请稍后'
+            duration: 5000,
+            content: '下载中，请稍后'
         })
         let result = await invoke.downloadRemoteFile(this.state.host, this.state.privateKeyPath, remoteFile, localSavePath)
-        if(result.success) {
+        if (result.success) {
             Message.success("下载成功")
         } else {
             Message.error('下载失败：' + result.message)
@@ -243,20 +243,20 @@ class App extends React.Component {
         const { join } = await import('@tauri-apps/api/path');
         let localSavePath = await join(savePath, record.name)
         let remoteFile = currentDir + "/" + record.name
-        
-        if(!record.is_dir) {
+
+        if (!record.is_dir) {
             console.log(this.state.host, this.state.privateKeyPath, remoteFile, localSavePath)
             let result = await invoke.downloadRemoteFile(this.state.host, this.state.privateKeyPath, remoteFile, localSavePath)
-            if(result.success) {
-                Message.success('下载`' +remoteFile +'`成功`')
+            if (result.success) {
+                Message.success('下载`' + remoteFile + '`成功`')
             } else {
-                Message.error('下载' + remoteFile +'失败：' + result.message)
+                Message.error('下载' + remoteFile + '失败：' + result.message)
             }
-            return 
+            return
         }
         await invoke.createDir(localSavePath)
         let data = await invoke.listFiles(this.state.host, this.state.privateKeyPath, remoteFile)
-        for(var i in data.data) {
+        for (var i in data.data) {
             await this.doDownloadRemoteDir(remoteFile, data.data[i], localSavePath)
         }
     }
@@ -301,18 +301,22 @@ class App extends React.Component {
 
                         </Card>
 
-                        <Card style={{ marginTop: '20px' }}>
-                            <Space split={<IconObliqueLine />} align={'center'} size={0} style={{ marginRight: '0' }}>
-                                <Link onClick={this.gotoDir.bind(this, { path: '/' })} style={{ fontSize: '20px' }} key={'/'}>根目录</Link>
-                                {
-                                    this.state.quickDirs.map(item => {
-                                        return <Link onClick={this.gotoDir.bind(this, item)} style={{ fontSize: '20px' }} key={item.path}>{item.name}</Link>
-                                    })
-                                }
-                            </Space>
-                            <Button onClick={this.listFiles} type='primary' size='mini'>更新</Button>
+                        <Card style={{ marginTop: '20px' }} title={
+                            <>
+                                <Button onClick={this.listFiles} type='primary' size='mini' icon={<IconRefresh />} style={{marginRight:'10px'}}>更新</Button>
+                                <Space split={<IconObliqueLine />} align={'center'} size={0} style={{ marginRight: '0' }}>
+
+                                    <Link onClick={this.gotoDir.bind(this, { path: '/' })} key={'/'}>根目录</Link>
+                                    {
+                                        this.state.quickDirs.map(item => {
+                                            return <Link onClick={this.gotoDir.bind(this, item)} key={item.path}>{item.name}</Link>
+                                        })
+                                    }
+                                </Space></>
+                        }>
+
                             <Table data={this.state.files} columns={this.columns} pagination={false} rowKey={'name'}
-                                scroll={{ y: 800 }} border={false} footer={this.state.directory} loading={this.state.fileLoading} />
+                                scroll={{ y: 800 }} border={false} footer={this.state.directory} loading={this.state.fileLoading} size='mini' />
                         </Card>
                     </Card>
                 </Col>
