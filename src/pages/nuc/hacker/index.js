@@ -243,7 +243,9 @@ class App extends React.Component {
         const { join } = await import('@tauri-apps/api/path');
         let localSavePath = await join(savePath, record.name)
         let remoteFile = currentDir + "/" + record.name
+        
         if(!record.is_dir) {
+            console.log(this.state.host, this.state.privateKeyPath, remoteFile, localSavePath)
             let result = await invoke.downloadRemoteFile(this.state.host, this.state.privateKeyPath, remoteFile, localSavePath)
             if(result.success) {
                 Message.success('下载`' +remoteFile +'`成功`')
@@ -252,11 +254,10 @@ class App extends React.Component {
             }
             return 
         }
-        await invoke.createDir(remoteFile)
-        let fileList = await invoke.listFiles(this.state.host, this.state.privateKeyPath, remoteFile)
-        console.log(fileList)
-        for(var i in fileList) {
-            await this.doDownloadRemoteDir(remoteFile, fileList[i], localSavePath)
+        await invoke.createDir(localSavePath)
+        let data = await invoke.listFiles(this.state.host, this.state.privateKeyPath, remoteFile)
+        for(var i in data.data) {
+            await this.doDownloadRemoteDir(remoteFile, data.data[i], localSavePath)
         }
     }
 
