@@ -2,8 +2,8 @@ import React from 'react';
 import { open } from '@tauri-apps/api/dialog';
 import { writeText } from '@tauri-apps/api/clipboard';
 import JSONEditor from '@/component/JSONEditor'
-import { Button, Message, Grid, Space, Card, Tag, Link, Divider, Modal, Form, Input, Table } from '@arco-design/web-react';
-import { IconExclamation, IconLoading, IconEdit, IconRefresh, IconObliqueLine } from '@arco-design/web-react/icon';
+import { Button, Message, Grid, Space, Card, Tag, Link, Divider, Modal, Form, Input, Table, Popover } from '@arco-design/web-react';
+import { IconArrowDown, IconDelete, IconUpload, IconRefresh, IconObliqueLine, IconFolderAdd } from '@arco-design/web-react/icon';
 import api from '@/util/api';
 import cache from '@/util/cache';
 import invoke from '@/util/invoke';
@@ -76,7 +76,8 @@ class App extends React.Component {
             'key': 'opt',
             'render': (col, record, index) => {
                 return <Space>
-                    <Button onClick={this.downloadRemoteFile.bind(this, record)} size="mini" type='text'>下载</Button>
+                    <Button onClick={this.downloadRemoteFile.bind(this, record)} size="mini" type='text' icon={<IconArrowDown />}>下载</Button>
+                    <Button onClick={this.deleteRemoteFile.bind(this, record)} size="mini" type='text' icon={<IconDelete />} status="danger">删除</Button>
                 </Space>
             }
         }
@@ -95,7 +96,9 @@ class App extends React.Component {
             directory: '/',
             quickDirs: [],
             files: [],
-            fileLoading: false
+            fileLoading: false,
+            visible: false,
+            newDirName: ''
         }
     }
     async componentDidMount() {
@@ -251,18 +254,52 @@ class App extends React.Component {
         let selected = await open({
             directory: false,
             multiple: false,
-            filters: [{
-                name: 'File',
-                extensions: ['txt']
-            }],
+
         });
         if (selected == null) {
             return
         }
         const { sep } = await import('@tauri-apps/api/path');
         let parts = selected.split(sep)
-        let remoteFile = this.state.directory + '/' + parts[parts.length - ]
-        await invoke.uploadRemoteFile((this.state.host, this.state.privateKeyPath, remoteFile, selected)
+        let remoteFile = this.state.directory + '/' + parts[parts.length - 1]
+        let result = await invoke.uploadRemoteFile(this.state.host, this.state.privateKeyPath, remoteFile, selected)
+        console.log(result)
+        if (result.success) {
+            Message.success('上传成功')
+            await this.listFiles()
+        } else {
+            Message.error(result.message)
+        }
+    }
+
+    deleteRemoteFile = async (item) => {
+        const { confirm } = await import('@tauri-apps/api/dialog');
+        const confirmed = await confirm('确认删除该文件（夹）', '删除提示');
+        if (confirm) {
+            let remoteFile = this.state.directory + '/' + item.name
+            let result = await invoke.deleteRemoteFile(this.state.host, this.state.privateKeyPath, remoteFile)
+            if (result.success) {
+                Message.success('删除成功')
+                await this.listFiles()
+            } else {
+                Message.error(result.message)
+            }
+
+        }
+    }
+    doNewDir = async () => {
+        if(this.state.newDirName.length > 0) {
+            let remoteFile = this.state.directory + '/' + this.state.newDirName
+            let result = await invoke.newRemoteDirectory(this.state.host, this.state.privateKeyPath, remoteFile)
+            if (result.success) {
+                Message.success('创建成功')
+                await this.setState({visible:false})
+                await this.listFiles()
+            } else {
+                Message.error(result.message)
+            }
+        }
+       
     }
 
     render() {
@@ -302,12 +339,10 @@ class App extends React.Component {
                                     <Button onClick={this.doUpdateOuterHost} type='primary'>更新</Button>
                                 </Col>
                             </Row>
-
                         </Card>
 
                         <Card style={{ marginTop: '20px' }} title={
                             <>
-                                <Button onClick={this.listFiles} type='primary' size='mini' icon={<IconRefresh />} style={{ marginRight: '10px' }}>更新</Button>
                                 <Space split={<IconObliqueLine />} align={'center'} size={0} style={{ marginRight: '0' }}>
 
                                     <Link onClick={this.gotoDir.bind(this, { path: '/' })} key={'/'}>根目录</Link>
@@ -317,9 +352,31 @@ class App extends React.Component {
                                         })
                                     }
                                 </Space>
-                                <Button onClick={this.uploadFile2Remote} type='primary' size='mini' style={{ marginLeft: '10px' }}>上传</Button>
                             </>
-                        }>
+                        } extra={<Space>
+                            <Button onClick={this.listFiles} type='primary' size='mini' icon={<IconRefresh />} style={{ marginRight: '10px' }}>更新</Button>
+                            <Button onClick={this.uploadFile2Remote} type='primary' size='mini' style={{ marginLeft: '10px' }} icon={<IconUpload />}>上传</Button>
+                            <Popover
+                                title='请输入名字'
+                                trigger='click'
+                                popupVisible={this.state.visible}
+                                onVisibleChange={(val) => {
+                                    this.setState({ visible: val })
+                                }}
+                                content={
+                                    <>
+                                        <Input size='small' value={this.state.newDirName} onChange={(val) => { this.setState({ newDirName: val }) }} />
+                                        <p>
+                                            <Button onClick={this.doNewDir} size="mini" type='primary'>确认</Button>
+                                        </p>
+                                    </>
+
+                                }
+                            >
+                                <Button onClick={this.newDirectory} type='primary' size='mini' style={{ marginLeft: '10px' }} icon={<IconFolderAdd />}>新建文件夹</Button>
+                            </Popover>
+
+                        </Space>}>
 
                             <Table data={this.state.files} columns={this.columns} pagination={false} rowKey={'name'}
                                 scroll={{ y: 800 }} border={false} footer={this.state.directory} loading={this.state.fileLoading} size='mini' />

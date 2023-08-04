@@ -93,7 +93,7 @@ var fileExists = async (filePath) => {
 var addDownloadWorkTask = async (dir, work_json) => {
     let result = await invoke('add_work_download_task', {
         dir: dir,
-        workJson : work_json,
+        workJson: work_json,
     })
     return result
 }
@@ -107,8 +107,8 @@ var queryDownloadTask = async (dir, work_json) => {
 var addProjectDownload = async (dir, project_id, db_version) => {
     let result = await invoke('add_project_download_task', {
         dir: dir,
-        projectId : project_id,
-        dbVersion : db_version
+        projectId: project_id,
+        dbVersion: db_version
     })
     return result
 }
@@ -169,17 +169,34 @@ var downloadRemoteFile = async (host, privateKeyPath, path, localSavePath) => {
 
 
 var uploadRemoteFile = async (host, privateKeyPath, path, localFile) => {
-    let result = await invoke('download_remote_file', {
+    let result = await invoke('upload_remote_file', {
         host, privateKeyPath, path, localFile
+    })
+    return result
+}
+
+var deleteRemoteFile = async (host, privateKeyPath, path) => {
+    let result = await invoke('remote_exec_cmd', {
+        host, privateKeyPath,
+        cmdString: "rm -rf " + path
+    })
+    return result
+}
+
+
+var newRemoteDirectory = async (host, privateKeyPath, path) => {
+    let result = await invoke('remote_exec_cmd', {
+        host, privateKeyPath,
+        cmdString: "mkdir -p " + path
     })
     return result
 }
 
 
 export {
-    writeFile, readFile, readDir, simpleReadDir, setWindowTitle, uploadFile, createFile, createDir, deleteFile, deleteFolder, renameFile, fileExists, addDownloadWorkTask, queryDownloadTask, addProjectDownload, queryProjectDownloadTask, parseJSCode, parseHTMLTitle, getLocalConfig, updateOuterHost, listFiles, downloadRemoteFile, uploadRemoteFile
+    writeFile, readFile, readDir, simpleReadDir, setWindowTitle, uploadFile, createFile, createDir, deleteFile, deleteFolder, renameFile, fileExists, addDownloadWorkTask, queryDownloadTask, addProjectDownload, queryProjectDownloadTask, parseJSCode, parseHTMLTitle, getLocalConfig, updateOuterHost, listFiles, downloadRemoteFile, uploadRemoteFile, deleteRemoteFile, newRemoteDirectory
 }
 
 export default {
-    writeFile, readFile, readDir, simpleReadDir, setWindowTitle, uploadFile, createFile, createDir, deleteFile, deleteFolder, renameFile, fileExists, addDownloadWorkTask, queryDownloadTask, addProjectDownload, queryProjectDownloadTask, parseJSCode, parseHTMLTitle, getLocalConfig, updateOuterHost, listFiles, downloadRemoteFile, uploadRemoteFile
+    writeFile, readFile, readDir, simpleReadDir, setWindowTitle, uploadFile, createFile, createDir, deleteFile, deleteFolder, renameFile, fileExists, addDownloadWorkTask, queryDownloadTask, addProjectDownload, queryProjectDownloadTask, parseJSCode, parseHTMLTitle, getLocalConfig, updateOuterHost, listFiles, downloadRemoteFile, uploadRemoteFile, deleteRemoteFile, newRemoteDirectory
 }

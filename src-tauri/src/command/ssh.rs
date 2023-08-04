@@ -247,3 +247,25 @@ pub async fn upload_remote_file(
         }
     }
 }
+
+#[tauri::command]
+pub async fn remote_exec_cmd(host: String, private_key_path: String, cmd_string: String) -> InvokeResponse {
+    let session = get_ssh_session(&host, &private_key_path);
+    if let Err(err) = session {
+        return InvokeResponse {
+            success: false,
+            message: err.to_string(),
+            data: json!(null),
+        };
+    }
+    let sess = session.unwrap();
+    let mut channel = sess.channel_session().unwrap();
+    channel.exec(&cmd_string).unwrap();
+    let mut result = String::new();
+    _ = channel.read_to_string(&mut result);
+    InvokeResponse {
+        success: true,
+        message: "".to_string(),
+        data: json!(result),
+    }
+}
