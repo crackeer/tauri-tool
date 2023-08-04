@@ -223,20 +223,6 @@ class App extends React.Component {
             }],
         });
         await this.doDownloadRemoteDir(this.state.directory, record, selected)
-        return
-        const { join } = await import('@tauri-apps/api/path');
-        let localSavePath = await join(selected, record.name)
-        let remoteFile = this.state.directory + "/" + record.name
-        Message.loading({
-            duration: 5000,
-            content: '下载中，请稍后'
-        })
-        let result = await invoke.downloadRemoteFile(this.state.host, this.state.privateKeyPath, remoteFile, localSavePath)
-        if (result.success) {
-            Message.success("下载成功")
-        } else {
-            Message.error('下载失败：' + result.message)
-        }
     }
 
     doDownloadRemoteDir = async (currentDir, record, savePath) => {
@@ -259,6 +245,24 @@ class App extends React.Component {
         for (var i in data.data) {
             await this.doDownloadRemoteDir(remoteFile, data.data[i], localSavePath)
         }
+    }
+
+    uploadFile2Remote = async () => {
+        let selected = await open({
+            directory: false,
+            multiple: false,
+            filters: [{
+                name: 'File',
+                extensions: ['txt']
+            }],
+        });
+        if (selected == null) {
+            return
+        }
+        const { sep } = await import('@tauri-apps/api/path');
+        let parts = selected.split(sep)
+        let remoteFile = this.state.directory + '/' + parts[parts.length - ]
+        await invoke.uploadRemoteFile((this.state.host, this.state.privateKeyPath, remoteFile, selected)
     }
 
     render() {
@@ -303,7 +307,7 @@ class App extends React.Component {
 
                         <Card style={{ marginTop: '20px' }} title={
                             <>
-                                <Button onClick={this.listFiles} type='primary' size='mini' icon={<IconRefresh />} style={{marginRight:'10px'}}>更新</Button>
+                                <Button onClick={this.listFiles} type='primary' size='mini' icon={<IconRefresh />} style={{ marginRight: '10px' }}>更新</Button>
                                 <Space split={<IconObliqueLine />} align={'center'} size={0} style={{ marginRight: '0' }}>
 
                                     <Link onClick={this.gotoDir.bind(this, { path: '/' })} key={'/'}>根目录</Link>
@@ -312,7 +316,9 @@ class App extends React.Component {
                                             return <Link onClick={this.gotoDir.bind(this, item)} key={item.path}>{item.name}</Link>
                                         })
                                     }
-                                </Space></>
+                                </Space>
+                                <Button onClick={this.uploadFile2Remote} type='primary' size='mini' style={{ marginLeft: '10px' }}>上传</Button>
+                            </>
                         }>
 
                             <Table data={this.state.files} columns={this.columns} pagination={false} rowKey={'name'}

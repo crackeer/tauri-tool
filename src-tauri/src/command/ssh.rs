@@ -183,7 +183,6 @@ pub async fn download_remote_file(
     let mut contents = Vec::new();
     remote_file.read_to_end(&mut contents).unwrap();
 
-
     // Close the channel and wait for the whole content to be tranferred
     remote_file.send_eof().unwrap();
     remote_file.wait_eof().unwrap();
@@ -191,7 +190,7 @@ pub async fn download_remote_file(
     remote_file.wait_close().unwrap();
 
     if let Err(err) = fs::write(local_save_path, &contents) {
-        return  InvokeResponse {
+        return InvokeResponse {
             success: false,
             message: err.to_string(),
             data: json!(null),
@@ -201,5 +200,50 @@ pub async fn download_remote_file(
         success: true,
         message: "success".to_string(),
         data: json!(null),
+    };
+}
+
+#[tauri::command]
+pub async fn upload_remote_file(
+    host: String,
+    private_key_path: String,
+    path: String,
+    local_file: String,
+) -> InvokeResponse {
+    let session = get_ssh_session(&host, &private_key_path);
+    if let Err(err) = session {
+        return InvokeResponse {
+            success: false,
+            message: err.to_string(),
+            data: json!(null),
+        };
+    }
+    let sess = session.unwrap();
+
+    match fs::read(Path::new(&local_file.as_str())) {
+        Ok(data) => {
+            // Write the file
+            let mut remote_file = sess
+                .scp_send(Path::new(&path.as_str()), 0o644, 10, None)
+                .unwrap();
+            remote_file.write(&data).unwrap();
+            remote_file.send_eof().unwrap();
+            remote_file.wait_eof().unwrap();
+            remote_file.close().unwrap();
+            remote_file.wait_close().unwrap();
+
+            InvokeResponse {
+                success: true,
+                message: "success".to_string(),
+                data: json!(null),
+            }
+        }
+        Err(err) => {
+            return InvokeResponse {
+                success: false,
+                message: err.to_string(),
+                data: json!(null),
+            }
+        }
     }
 }
