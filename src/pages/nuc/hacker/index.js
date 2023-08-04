@@ -4,12 +4,8 @@ import { writeText } from '@tauri-apps/api/clipboard';
 import JSONEditor from '@/component/JSONEditor'
 import { Button, Message, Grid, Space, Card, Tag, Link, Divider, Modal, Form, Input, Table, Popover } from '@arco-design/web-react';
 import { IconArrowDown, IconDelete, IconUpload, IconRefresh, IconObliqueLine, IconFolderAdd } from '@arco-design/web-react/icon';
-import api from '@/util/api';
 import cache from '@/util/cache';
 import invoke from '@/util/invoke';
-import dayjs from 'dayjs';
-import { message } from 'antd';
-import { remove } from 'lodash';
 const Row = Grid.Row;
 const Col = Grid.Col;
 const FormItem = Form.Item;
