@@ -9,13 +9,9 @@ const MenuItem = Menu.Item;
 
 const MenuList = [
     {'key' : 'main', 'icon' : <IconHome /> , 'href': '/', 'title': '主页'},
-    {'key' : 'file', 'icon' : <IconCodeSquare /> , 'href': '/file', 'title': '文件'},
+    {'key' : '/file/list', 'icon' : <IconCodeSquare /> , 'href': '/file', 'title': '文件'},
+    {'key' : '/markdown/create', 'icon' : <IconCodeSquare /> , 'href': '/file', 'title': '文件'},
 ]
-/*
-const MenuList = [
-    {'key' : 'nuc_system', 'icon' : <IconHighlight />, 'href': '/nuc/system', 'title': '主机'},
-    {'key' : 'nuc_hacker', 'icon' : <IconStrikethrough  />, 'href': '/nuc/hacker', 'title': 'Hacker'},
-]*/
 
 function getMarginLeft(value) {
     if (value) {
@@ -63,7 +59,8 @@ class ClassApp extends React.Component {
         cache.setMenuCollapsed(value ? 1 : 0)
     }
     clickMenuItem = async (key) => {
-        //window.location.href = "/" + key
+        window.location.href = key
+        return
         for(var i in MenuList) {
             if(MenuList[i].key === key) {
                 window.location.href = MenuList[i].href
