@@ -67,7 +67,7 @@ var calculateCRC32 = (data) => {
 }  
 
 var getViewHeight = () => {
-    return document.documentElement.clientHeight - 76
+    return document.documentElement.clientHeight - 80
 }
 var detectFileType = (file) => {
     if (lodash.endsWith(file, '.md')) {

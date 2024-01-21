@@ -33,7 +33,7 @@ class App extends React.Component {
         cache.addOpenFiles([file])
         this.loadFile(file, mode)
     }
-    htmlTitle = () => {
+    pageTitle = () => {
         return <h3><Space>
             {this.state.activeFile}
             <Button onClick={this.switchEdit} type='primary' size="mini">

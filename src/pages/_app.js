@@ -1,16 +1,17 @@
 import React from 'react';
 import '@/styles/globals.css'
 import "@arco-design/web-react/dist/css/arco.css";
-import { Layout, Menu, Affix } from '@arco-design/web-react';
+import { Layout, Menu, Affix, Divider } from '@arco-design/web-react';
 import { IconHome, IconCodeSquare, IconScan, IconSelectAll, IconSend, IconHighlight, IconCloudDownload, IconStrikethrough } from '@arco-design/web-react/icon';
 import cache from '@/util/cache';
 const Sider = Layout.Sider;
 const MenuItem = Menu.Item;
 
 const MenuList = [
-    {'key' : 'main', 'icon' : <IconHome /> , 'href': '/', 'title': '主页'},
-    {'key' : '/file/list', 'icon' : <IconCodeSquare /> , 'href': '/file', 'title': '文件'},
-    {'key' : '/markdown/create', 'icon' : <IconCodeSquare /> , 'href': '/file', 'title': '文件'},
+    { 'key': 'main', 'icon': <IconHome />, 'title': '主页' },
+    { 'key': '/file/list', 'icon': <IconCodeSquare />, 'title': '文件列表' },
+    { 'key': '/markdown/create', 'icon': <IconCodeSquare />, 'title': '新建Markdown' },
+    { 'key': '/json/create', 'icon': <IconCodeSquare />, 'title': '新建JSON' },
 ]
 
 function getMarginLeft(value) {
@@ -38,16 +39,16 @@ class ClassApp extends React.Component {
     }
     refUpdate = async (ref) => {
         this.ref = ref;
-        if (ref != null && ref.htmlTitle != undefined) {
+        if (ref != null && ref.pageTitle != undefined) {
             this.setState({
-                headTitle: ref.htmlTitle(),
+                headTitle: ref.pageTitle(),
             })
         }
     }
     updateTitle = () => {
-        if (this.ref != null && this.ref.htmlTitle != undefined) {
+        if (this.ref != null && this.ref.pageTitle != undefined) {
             this.setState({
-                headTitle: this.ref.htmlTitle(),
+                headTitle: this.ref.pageTitle(),
             })
         }
     }
@@ -60,13 +61,6 @@ class ClassApp extends React.Component {
     }
     clickMenuItem = async (key) => {
         window.location.href = key
-        return
-        for(var i in MenuList) {
-            if(MenuList[i].key === key) {
-                window.location.href = MenuList[i].href
-                return
-            }
-        }
     }
     render() {
         const { Component, pageProps } = this.props
@@ -97,10 +91,9 @@ class ClassApp extends React.Component {
                         }
                     </Menu>
                 </Sider>
-                <Layout style={{ marginLeft: this.state.marginLeft, padding: '10px' }}>
-                    <Affix offsetTop={0} affixStyle={{ background: 'white' }}>
-                        {this.state.headTitle}
-                    </Affix>
+                <Layout style={{ marginLeft: this.state.marginLeft, padding: '1px 10px' }}>
+                    {this.state.headTitle}
+                    <Divider></Divider>
                     <Component {...pageProps} ref={this.refUpdate} updateTitle={this.updateTitle} />
                 </Layout>
             </Layout>

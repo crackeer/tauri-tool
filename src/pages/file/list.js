@@ -19,13 +19,12 @@ class App extends React.Component {
             files: list
         })
     }
-    htmlTitle = () => {
+    pageTitle = () => {
         return <h3><Space>
             文件
             <Button onClick={this.addFile} type="primary" size="mini">添加</Button>
             <Button onClick={this.openFile} type="primary" size="mini">打开</Button>
             <Button type='link' href={'/file/create?file_type=json'} size="mini">新建JSON</Button>
-            <Button type='link' href={'/file/create?file_type=md'} size="mini">新建MD</Button>
         </Space></h3>
     }
     openFile = async () => {
@@ -125,6 +124,15 @@ class App extends React.Component {
 }
 
 const Files = (props) => {
+    const fileView = (item) => {
+        if(item.file_type == 'MD') {
+            window.location.href = '/markdown/detail?file=' + item.file
+        } else if (item.file_type == 'JSON') {
+            window.location.href = '/json/detail?file=' + item.file
+        } else {
+            window.location.href = '/file/view?file=' + item.file
+        }
+    }
     return <List dataSource={props.data} size={'small'} render={(item, index) => {
         return <List.Item key={index} actions={[
             <span className='list-demo-actions-icon' onClick={() => {
@@ -135,7 +143,7 @@ const Files = (props) => {
         ]} >
             <List.Item.Meta
                 avatar={<Avatar shape='square' style={{ backgroundColor: item.color }}>{item.file_type}</Avatar>}
-                title={<Link href={'/file/view?file=' + item.file}>{item.file}</Link>}
+                title={<Link onClick={fileView.bind(this, item)}>{item.file}</Link>}
                 description={item.time}
             />
         </List.Item>
