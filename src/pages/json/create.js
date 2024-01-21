@@ -24,7 +24,7 @@ class App extends React.Component {
             let value = await invoke.readFile(file)
             try {
                 content = JSON.parse(value)
-            } catch(e) {
+            } catch (e) {
 
             }
         }
@@ -78,29 +78,6 @@ class App extends React.Component {
             Message.info('文件保存成功')
         }
 
-    }
-
-    handleKeyUp = async (event) => {
-        if (event.key === "s" && (event.ctrlKey || event.metaKey)) {
-            event.preventDefault();
-            console.log(this.state.file_type, common.getFileExtByType(this.state.file_type))
-            let filePath = await save({
-                filters: [{
-                    name: this.state.file_type,
-                    extensions: [common.getFileExtByType(this.state.file_type)]
-                }]
-            });
-            if (filePath == null || filePath.length === 0) {
-                return
-            }
-            let content = this.state.value
-            if (this.state.file_type == common.FileTypeJSON) {
-                content = JSON.stringify(this.state.value)
-            }
-            await invoke.writeFile(filePath, content)
-            Message.info('保存成功')
-            window.location.href = "/file/view?file=" + filePath
-        }
     }
 
     render() {

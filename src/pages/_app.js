@@ -2,17 +2,17 @@ import React from 'react';
 import '@/styles/globals.css'
 import "@arco-design/web-react/dist/css/arco.css";
 import { Layout, Menu, Affix, Divider } from '@arco-design/web-react';
-import { IconHome, IconCodeSquare, IconScan, IconSelectAll, IconSend, IconHighlight, IconCloudDownload, IconStrikethrough } from '@arco-design/web-react/icon';
+import { IconHome, IconCodeSquare, IconScan, IconSend, IconHighlight, IconCloudDownload, IconQrcode } from '@arco-design/web-react/icon';
 import cache from '@/util/cache';
 const Sider = Layout.Sider;
 const MenuItem = Menu.Item;
 
 const MenuList = [
     { 'key': 'main', 'icon': <IconHome />, 'title': '主页' },
-    { 'key': '/file/list', 'icon': <IconCodeSquare />, 'title': '文件列表' },
     { 'key': '/markdown/create', 'icon': <IconCodeSquare />, 'title': '新建Markdown' },
-    { 'key': '/json/create', 'icon': <IconCodeSquare />, 'title': '新建JSON' },
-    { 'key': '/tools/web', 'icon': <IconCodeSquare />, 'title': 'Web工具' },
+    { 'key': '/json/create', 'icon': <IconCloudDownload />, 'title': '新建JSON' },
+    { 'key': '/tools/web', 'icon': <IconHighlight />, 'title': 'Web工具' },
+    { 'key': '/tools/qrcode', 'icon': <IconQrcode />, 'title': 'QRCode生成' },
 ]
 
 function getMarginLeft(value) {
