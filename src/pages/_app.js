@@ -12,6 +12,7 @@ const MenuList = [
     { 'key': '/file/list', 'icon': <IconCodeSquare />, 'title': '文件列表' },
     { 'key': '/markdown/create', 'icon': <IconCodeSquare />, 'title': '新建Markdown' },
     { 'key': '/json/create', 'icon': <IconCodeSquare />, 'title': '新建JSON' },
+    { 'key': '/tools/web', 'icon': <IconCodeSquare />, 'title': 'Web工具' },
 ]
 
 function getMarginLeft(value) {
