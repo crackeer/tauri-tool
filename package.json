@@ -26,7 +26,7 @@
     "lodash": "^4.17.21",
     "monaco-editor": "^0.39.0",
     "monaco-editor-webpack-plugin": "^7.0.1",
-    "next": "^13.2.4",
+    "next": "^14.1.0",
     "next-fonts": "^1.5.1",
     "next-transpile-modules": "^10.0.0",
     "node-polyfill-webpack-plugin": "^2.0.1",

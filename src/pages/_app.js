@@ -13,6 +13,7 @@ const MenuList = [
     { 'key': '/json/create', 'icon': <IconCloudDownload />, 'title': '新建JSON' },
     { 'key': '/tools/web', 'icon': <IconHighlight />, 'title': 'Web工具' },
     { 'key': '/tools/qrcode', 'icon': <IconQrcode />, 'title': 'QRCode生成' },
+    { 'key': '/http/web_static', 'icon': <IconQrcode />, 'title': 'WebStatic' },
 ]
 
 function getMarginLeft(value) {
