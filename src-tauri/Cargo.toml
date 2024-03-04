@@ -29,6 +29,7 @@ tar = "0.4"
 flate2 = "1.0"
 scraper = "0.12.0"
 ssh2 = "0.9.4"
+tauri_command = { path = "../../tauri_command" }
 
 [features]
 # by default Tauri runs in production mode

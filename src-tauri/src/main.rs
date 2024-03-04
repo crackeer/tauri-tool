@@ -20,6 +20,7 @@ use command::project::{
 use command::ssh::{
     get_local_config, update_outer_host, list_files, download_remote_file, upload_remote_file, remote_exec_cmd
 };
+use tauri_command::http::{request::http_request, static_server::start_http_static_server};
 
 use command::http::{parse_js_code, parse_html_title};
 use tauri::{CustomMenuItem, Menu, MenuItem, Submenu};
