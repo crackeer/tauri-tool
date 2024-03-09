@@ -1,3 +1,4 @@
+'use client'
 import React, {Component} from 'react';
 import 'jsoneditor/dist/jsoneditor.css';
 export default class JSONEditor extends Component {

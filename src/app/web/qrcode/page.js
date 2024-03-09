@@ -1,3 +1,4 @@
+'use client'
 import React from 'react';
 import { Button, Input, Grid, Space } from '@arco-design/web-react';
 const Row = Grid.Row;
@@ -11,10 +12,6 @@ class Convert extends React.Component {
             output: '',
         }
     }
-    pageTitle = () => {
-        return <h3>QRCode生成</h3>
-    }
-
     render() {
         return (
             <div>

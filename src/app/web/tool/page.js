@@ -1,3 +1,4 @@
+'use client'
 import React from 'react';
 import { Button, Input, Grid, Space } from'@arco-design/web-react';
 import { Base64 } from 'js-base64';

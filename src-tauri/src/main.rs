@@ -5,6 +5,7 @@
 mod command;
 mod util;
 use std::vec;
+
 #[macro_use]
 extern crate lazy_static;
 use command::file::{
@@ -20,7 +21,7 @@ use command::project::{
 use command::ssh::{
     get_local_config, update_outer_host, list_files, download_remote_file, upload_remote_file, remote_exec_cmd
 };
-use tauri_command::http::{request::http_request, static_server::start_http_static_server};
+use tauri_command::http::{request::http_request, static_server::start_http_static_server, static_server::stop_http_static_server, static_server::http_static_server_status};
 
 use command::http::{parse_js_code, parse_html_title};
 use tauri::{CustomMenuItem, Menu, MenuItem, Submenu};
@@ -65,7 +66,10 @@ fn main() {
             list_files,
             download_remote_file,
             upload_remote_file,
-            remote_exec_cmd
+            remote_exec_cmd,
+            start_http_static_server,
+            stop_http_static_server,
+            http_static_server_status,
         ])
         .menu(menu)
         .on_menu_event(window_menu_event)

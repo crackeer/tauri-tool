@@ -1,3 +1,4 @@
+'use client'
 import React from 'react';
 import 'jsoneditor/dist/jsoneditor.css';
 import { Button, Modal, List, Link, Space, Message } from '@arco-design/web-react';

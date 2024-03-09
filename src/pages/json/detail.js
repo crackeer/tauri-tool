@@ -3,8 +3,6 @@ import JSONView from '@/component/JSONView';
 import cache from '@/util/cache';
 import invoke from '@/util/invoke'
 import common from '@/util/common'
-import ReactJson from '@microlink/react-json-view'
-
 class App extends React.Component {
     editor = null;
     constructor(props) {

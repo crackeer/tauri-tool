@@ -9,6 +9,7 @@ const VRFiles = "VRFiles"
 const Project = "Project"
 const ProjectSaveDir = "ProjectSaveDir"
 const CacheHost = "CacheHost"
+const STATIC_SERVER = "static_server"
 
 var get = async (key) => {
     try {
@@ -22,6 +23,23 @@ var get = async (key) => {
 var set = async (key, value) => {
     try {
         return await writeTextFile(key, value, { dir: BaseDirectory.Cache });
+    } catch(e) {
+        return false;
+    }
+}
+
+var getJSON = async (key) => {
+    try {
+        let value =  await readTextFile(key, { dir: BaseDirectory.Cache });
+        return JSON.parse(value)
+    } catch(e) {
+        return null
+    }
+}
+
+var setJSON = async (key, value) => {
+    try {
+        return await writeTextFile(key, JSON.stringify(value), { dir: BaseDirectory.Cache });
     } catch(e) {
         return false;
     }
@@ -155,6 +173,14 @@ var getCacheHost = async () => {
 var setCacheHost = async (data) => {
     await set(CacheHost, JSON.stringify(data))
 }
+var getStaticServerConfig = async () => {
+    return await getJSON(STATIC_SERVER)
+}
+
+var setStaticServerConfig = async (config) => {
+    return await setJSON(STATIC_SERVER, config)
+}
+
 
 export default {
     getMenuCollapsed,
@@ -173,5 +199,7 @@ export default {
     getProjectSaveDir,
     setProjectSaveDir,
     getCacheHost,
-    setCacheHost
+    setCacheHost,
+    getStaticServerConfig,
+    setStaticServerConfig
 }
