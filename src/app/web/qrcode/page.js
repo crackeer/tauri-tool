@@ -1,9 +1,10 @@
 'use client'
 import React from 'react';
 import { Button, Input, Grid, Space } from '@arco-design/web-react';
+import QRCode from 'qrcode.react';
+
 const Row = Grid.Row;
 const Col = Grid.Col;
-import QRCode from 'qrcode.react';
 class Convert extends React.Component {
     constructor(props) {
         super(props); // 用于父子组件传值

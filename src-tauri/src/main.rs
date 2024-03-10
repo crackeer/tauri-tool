@@ -22,10 +22,10 @@ use command::project::{
 use command::ssh::{
     get_local_config, update_outer_host, list_files, download_remote_file, upload_remote_file, remote_exec_cmd
 };
+
 #[macro_use]
-extern crate tauri_command;
-use tauri_command::{http::static_server::{http_static_server_status, start_http_static_server, stop_http_static_server}, http::request::http_request};
-//use tauri_command::http::{request::http_request, static_server::start_http_static_server, static_server::stop_http_static_server, static_server::http_static_server_status};
+extern crate tauri_box;
+use tauri_box::tauri_command::{http_server::{static_server_status, start_static_server, stop_static_server}, http_request::request as http_request};
 
 use command::http::{parse_js_code, parse_html_title};
 use tauri::{CustomMenuItem, Menu, MenuItem, Submenu};
@@ -71,9 +71,9 @@ fn main() {
             download_remote_file,
             upload_remote_file,
             remote_exec_cmd,
-            http_static_server_status,
-            start_http_static_server,
-            stop_http_static_server,
+            static_server_status,
+            start_static_server,
+            stop_static_server,
             http_request
         ])
         .menu(menu)

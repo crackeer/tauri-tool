@@ -1,7 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import { Breadcrumb, Link, Space } from '@arco-design/web-react';
-const BreadcrumbItem = Breadcrumb.Item;
 import '@/styles/globals.css'
 import "@arco-design/web-react/dist/css/arco.css";
 import { Layout, Menu, Affix, Divider } from '@arco-design/web-react';
@@ -9,6 +8,7 @@ import menu from "../config/menu"
 const Sider = Layout.Sider;
 const MenuItem = Menu.Item;
 
+const BreadcrumbItem = Breadcrumb.Item;
 
 export default function RootLayout({
     children

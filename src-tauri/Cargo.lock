@@ -64,7 +64,7 @@ dependencies = [
  "tar",
  "tauri",
  "tauri-build",
- "tauri_command",
+ "tauri_box",
  "tokio",
  "zip",
 ]
@@ -3458,7 +3458,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "tauri_command"
+name = "tauri_box"
 version = "0.1.0"
 dependencies = [
  "axum",
