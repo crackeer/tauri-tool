@@ -17,7 +17,6 @@ export default function RootLayout({
     const [collapsed, setCollapse] = useState(false);
     const [activeMenuKey, setActiveMenuKey] = useState('')
     useEffect(() => {
-        //alert(window.location.pathname)
         setActiveMenuKey(window.location.pathname)
     }, []);
     const getMarginLeft = () => {
@@ -27,7 +26,7 @@ export default function RootLayout({
         return "200px"
     }
     const clickMenuItem = (item) => {
-        setActiveMenuKey(item)
+        window.location.href = item
     }
     return (
         <html lang="en">
@@ -49,7 +48,7 @@ export default function RootLayout({
                             {
                                 menu.map(item => {
                                     return <MenuItem key={item.key} className={activeMenuKey == item.key ? 'active-menu' : ''}>
-                                        <Link href={item.key} type='text' hoverable={false}>{item.icon}{item.title}</Link>
+                                       {item.icon}{item.title}
                                     </MenuItem>
                                 })
                             }

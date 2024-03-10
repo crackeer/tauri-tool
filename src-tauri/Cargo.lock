@@ -57,6 +57,7 @@ dependencies = [
  "lazy_static",
  "reqwest",
  "rust-embed",
+ "rust_box",
  "scraper",
  "serde",
  "serde_json",
@@ -64,7 +65,6 @@ dependencies = [
  "tar",
  "tauri",
  "tauri-build",
- "tauri_box",
  "tokio",
  "zip",
 ]
@@ -2699,6 +2699,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "rust_box"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "base64 0.21.2",
+ "bytes",
+ "flate2",
+ "lazy_static",
+ "rand 0.8.5",
+ "reqwest",
+ "rust-embed",
+ "scraper",
+ "serde",
+ "serde_json",
+ "ssh2",
+ "tar",
+ "tauri",
+ "tokio",
+ "tower",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "zip",
+]
+
+[[package]]
 name = "rustc-demangle"
 version = "0.1.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3455,32 +3481,6 @@ dependencies = [
  "quick-xml 0.23.1",
  "strum",
  "windows 0.39.0",
-]
-
-[[package]]
-name = "tauri_box"
-version = "0.1.0"
-dependencies = [
- "axum",
- "base64 0.21.2",
- "bytes",
- "flate2",
- "lazy_static",
- "rand 0.8.5",
- "reqwest",
- "rust-embed",
- "scraper",
- "serde",
- "serde_json",
- "ssh2",
- "tar",
- "tauri",
- "tokio",
- "tower",
- "tower-http",
- "tracing",
- "tracing-subscriber",
- "zip",
 ]
 
 [[package]]

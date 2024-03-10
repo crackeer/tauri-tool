@@ -3,7 +3,6 @@
     windows_subsystem = "windows"
 )]
 mod command;
-mod util;
 use std::vec;
 
 #[macro_use]
@@ -15,6 +14,10 @@ use rust_box::tauri_command::{
     http_server::{static_server_status, start_static_server, stop_static_server}, 
     http_request::{request, parse_js_code, parse_html_title},
 };
+use rust_box::tauri_command::ssh::{
+    ls_files, download_remote_file, upload_remote_file, remote_exec_cmd
+};
+use rust_box::tauri_command::network::{get_local_addr};
 
 use rust_box::tauri_command::file::{
     create_dir, create_file, delete_file, delete_folder, get_file_content, rename_file,
@@ -28,9 +31,7 @@ use command::work::{
 use command::project::{
     add_project_download_task, query_project_download_state
 };
-use rust_box::tauri_command::ssh::{
-    ls_files, download_remote_file, upload_remote_file, remote_exec_cmd
-};
+
 
 use tauri::{CustomMenuItem, Menu, MenuItem, Submenu};
 use tauri::{Window, WindowMenuEvent};
@@ -49,7 +50,7 @@ fn main() {
             .add_native_item(MenuItem::Cut)
             .add_native_item(MenuItem::SelectAll),
     );
-    let menu = Menu::new().add_submenu(native_menu)
+    let menu = Menu::new().add_submenu(native_menu);
     //let menu = Menu::os_default(&"sss");
     let ctx = tauri::generate_context!();
     tauri::Builder::default()
@@ -78,7 +79,8 @@ fn main() {
             static_server_status,
             start_static_server,
             stop_static_server,
-            request
+            request,
+            get_local_addr
         ])
         .menu(menu)
         .on_menu_event(window_menu_event)

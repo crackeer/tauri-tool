@@ -9,7 +9,10 @@ import {
     Input,
     Grid,
     Breadcrumb,
-    Radio
+    Radio,
+    Divider,
+    Space,
+    Link,
 } from "@arco-design/web-react";
 import { IconPlayArrow, IconLoading } from "@arco-design/web-react/icon";
 import cache from "@/util/cache";
@@ -25,6 +28,7 @@ class App extends React.Component {
             staticPath: "",
             port: 8888,
             running: 0,
+            local_addr: '',
         };
     }
     async componentDidMount() {
@@ -35,9 +39,6 @@ class App extends React.Component {
             let data = await cache.getStaticServerConfig();
             this.setState(data);
         }
-    }
-    getName = () => {
-        return 'hsjha'
     }
     selectStaticPath = async () => {
         let selected = await open({
@@ -75,10 +76,16 @@ class App extends React.Component {
         }
         let result = await invoke.startHTTPServer(this.state.staticPath, parseInt(this.state.port))
         if (result.success) {
-            Message.success("静态资源服务启动成功")
-            this.setState({
-                running: 1,
-            })
+            result = await invoke.getLocalAddr()
+            if (result.success) {
+                Message.success("静态资源服务启动成功")
+                this.setState({
+                    running: 1,
+                    local_addr: result.data.addr,
+                })
+            }
+            
+
             return
         } else {
             Message.error(result.message)
@@ -98,8 +105,8 @@ class App extends React.Component {
     }
 
     render() {
-        return (
-            <Card style={{width:'60%'}} >
+        return <div>
+            <Card  >
                 <Form autoComplete="off">
                     <FormItem label="静态资源文件夹" >
                         <Grid.Row gutter={8}>
@@ -126,14 +133,22 @@ class App extends React.Component {
                                 />
                             </Grid.Col>
                         </Grid.Row>
-
                     </FormItem>
                     <FormItem wrapperCol={{ offset: 5 }}>
                         <Button type="primary" status={this.state.running > 0 ? 'danger' : ''} onClick={this.startHTTP} icon={this.state.running ? <IconLoading /> : <IconPlayArrow />}>{this.state.running > 0 ? '服务运行中,点击停止服务' : '启动'}</Button>
                     </FormItem>
+                    {
+                        this.state.running > 0 ? <Divider><Space>
+                            {
+                                this.state.local_addr.length > 0 ? <Link href={'http://' + this.state.local_addr + ':' + this.state.port} target='_blank'>http://{this.state.local_addr}:{this.state.port}</Link> : null
+                            }
+                            <Link href={'http://localhost:' + this.state.port} target='_blank'>http://localhost:{this.state.port}</Link>
+                        </Space> </Divider> : null
+                    }
+
                 </Form>
             </Card>
-        );
+        </div>;
     }
 }
 

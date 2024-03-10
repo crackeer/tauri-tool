@@ -193,23 +193,27 @@ var newRemoteDirectory = async (host, privateKeyPath, path) => {
 }
 
 var startHTTPServer = async (staticPath, port) => {
-    return await invoke('start_http_static_server', {staticPath, port})
+    return await invoke('start_static_server', {staticPath, port})
 }
 
 var stopHTTPServer = async () => {
-    return await invoke('stop_http_static_server', {})
+    return await invoke('stop_static_server', {})
 }
 
 var httpServerStatus = async () => {
-    return await invoke('http_static_server_status', {})
+    return await invoke('static_server_status', {})
+}
+
+var getLocalAddr = async () => {
+    return await invoke('get_local_addr', {})
 }
 
 
 
 export {
-    writeFile, readFile, readDir, simpleReadDir, setWindowTitle, uploadFile, createFile, createDir, deleteFile, deleteFolder, renameFile, fileExists, addDownloadWorkTask, queryDownloadTask, addProjectDownload, queryProjectDownloadTask, parseJSCode, parseHTMLTitle, getLocalConfig, updateOuterHost, listFiles, downloadRemoteFile, uploadRemoteFile, deleteRemoteFile, newRemoteDirectory, startHTTPServer, stopHTTPServer, httpServerStatus
+    writeFile, readFile, readDir, simpleReadDir, setWindowTitle, uploadFile, createFile, createDir, deleteFile, deleteFolder, renameFile, fileExists, addDownloadWorkTask, queryDownloadTask, addProjectDownload, queryProjectDownloadTask, parseJSCode, parseHTMLTitle, getLocalConfig, updateOuterHost, listFiles, downloadRemoteFile, uploadRemoteFile, deleteRemoteFile, newRemoteDirectory, startHTTPServer, stopHTTPServer, httpServerStatus, getLocalAddr
 }
 
 export default {
-    writeFile, readFile, readDir, simpleReadDir, setWindowTitle, uploadFile, createFile, createDir, deleteFile, deleteFolder, renameFile, fileExists, addDownloadWorkTask, queryDownloadTask, addProjectDownload, queryProjectDownloadTask, parseJSCode, parseHTMLTitle, getLocalConfig, updateOuterHost, listFiles, downloadRemoteFile, uploadRemoteFile, deleteRemoteFile, newRemoteDirectory, startHTTPServer, stopHTTPServer, httpServerStatus
+    writeFile, readFile, readDir, simpleReadDir, setWindowTitle, uploadFile, createFile, createDir, deleteFile, deleteFolder, renameFile, fileExists, addDownloadWorkTask, queryDownloadTask, addProjectDownload, queryProjectDownloadTask, parseJSCode, parseHTMLTitle, getLocalConfig, updateOuterHost, listFiles, downloadRemoteFile, uploadRemoteFile, deleteRemoteFile, newRemoteDirectory, startHTTPServer, stopHTTPServer, httpServerStatus, getLocalAddr
 }
