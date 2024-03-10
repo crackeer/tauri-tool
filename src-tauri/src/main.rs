@@ -8,10 +8,19 @@ use std::vec;
 
 #[macro_use]
 extern crate lazy_static;
+
+#[macro_use]
+extern crate tauri_box;
+use tauri_box::tauri_command::{
+    http_server::{static_server_status, start_static_server, stop_static_server}, 
+    http_request::{request as http_request, parse_js_code, parse_html_title},
+};
+
 use command::file::{
     create_dir, create_file, delete_file, delete_folder, get_file_content, rename_file,
     simple_read_dir, write_file, write_media_file, file_exists
 };
+
 use command::work::{
     add_work_download_task, query_all_task_state
 };
@@ -23,11 +32,9 @@ use command::ssh::{
     get_local_config, update_outer_host, list_files, download_remote_file, upload_remote_file, remote_exec_cmd
 };
 
-#[macro_use]
-extern crate tauri_box;
-use tauri_box::tauri_command::{http_server::{static_server_status, start_static_server, stop_static_server}, http_request::request as http_request};
 
-use command::http::{parse_js_code, parse_html_title};
+
+//use command::http::{parse_js_code, parse_html_title};
 use tauri::{CustomMenuItem, Menu, MenuItem, Submenu};
 use tauri::{Window, WindowMenuEvent};
 
