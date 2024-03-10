@@ -29,7 +29,7 @@ tar = "0.4"
 flate2 = "1.0"
 scraper = "0.12.0"
 ssh2 = "0.9.4"
-tauri_box = { path = "../../tauri_box" }
+rust_box = { path = "../../rust_box" }
 
 [features]
 # by default Tauri runs in production mode

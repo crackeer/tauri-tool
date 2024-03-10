@@ -10,13 +10,13 @@ use std::vec;
 extern crate lazy_static;
 
 #[macro_use]
-extern crate tauri_box;
-use tauri_box::tauri_command::{
+extern crate rust_box;
+use rust_box::tauri_command::{
     http_server::{static_server_status, start_static_server, stop_static_server}, 
-    http_request::{request as http_request, parse_js_code, parse_html_title},
+    http_request::{request, parse_js_code, parse_html_title},
 };
 
-use command::file::{
+use rust_box::tauri_command::file::{
     create_dir, create_file, delete_file, delete_folder, get_file_content, rename_file,
     simple_read_dir, write_file, write_media_file, file_exists
 };
@@ -28,20 +28,19 @@ use command::work::{
 use command::project::{
     add_project_download_task, query_project_download_state
 };
-use command::ssh::{
-    get_local_config, update_outer_host, list_files, download_remote_file, upload_remote_file, remote_exec_cmd
+use rust_box::tauri_command::ssh::{
+    ls_files, download_remote_file, upload_remote_file, remote_exec_cmd
 };
 
-
-
-//use command::http::{parse_js_code, parse_html_title};
 use tauri::{CustomMenuItem, Menu, MenuItem, Submenu};
 use tauri::{Window, WindowMenuEvent};
 
 fn main() {
     // 这里 `"quit".to_string()` 定义菜单项 ID，第二个参数是菜单项标签。
+    /* 
     let close = CustomMenuItem::new("open_folder".to_string(), "Open Folder");
     let submenu = Submenu::new("File", Menu::new().add_item(close));
+    */
     let native_menu = Submenu::new(
         "System",
         Menu::new()
@@ -50,7 +49,7 @@ fn main() {
             .add_native_item(MenuItem::Cut)
             .add_native_item(MenuItem::SelectAll),
     );
-    let menu = Menu::new().add_submenu(native_menu).add_submenu(submenu);
+    let menu = Menu::new().add_submenu(native_menu)
     //let menu = Menu::os_default(&"sss");
     let ctx = tauri::generate_context!();
     tauri::Builder::default()
@@ -72,16 +71,14 @@ fn main() {
             query_project_download_state,
             parse_js_code,
             parse_html_title,
-            get_local_config,
-            update_outer_host,
-            list_files,
+            ls_files,
             download_remote_file,
             upload_remote_file,
             remote_exec_cmd,
             static_server_status,
             start_static_server,
             stop_static_server,
-            http_request
+            request
         ])
         .menu(menu)
         .on_menu_event(window_menu_event)
