@@ -1,4 +1,5 @@
-use rust_box::toolbox::file;
+use rust_box::toolbox::http_request;
+use rust_box::toolbox::zip;
 use reqwest;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -203,11 +204,11 @@ pub async fn download_project_to(
         zip_file_name.push_str(&".zip");
         let cc = download_path.join(&zip_file_name);
         let dest = cc.to_str().unwrap();
-        if let Err(err) = file::download_file_to(&item.0.clone(), dest).await {
+        if let Err(err) = http_request::download_file_to(&item.0.clone(), dest).await {
             return Err(err)
         }
         let extract_dest = Path::new(&dir).join(&item.1);
-        if let Err(err) = file::extract_zip(dest, extract_dest.to_str().unwrap()) {
+        if let Err(err) = zip::extract(dest, extract_dest.to_str().unwrap()) {
             return Err(err)
         }
         println!("{} - {} - {}", index +1, download.len(), (index + 1) * 100 / download.len());

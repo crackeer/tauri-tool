@@ -19,12 +19,6 @@ export default function RootLayout({
     useEffect(() => {
         setActiveMenuKey(window.location.pathname)
     }, []);
-    const getMarginLeft = () => {
-        if (collapsed) {
-            return "48px"
-        }
-        return "200px"
-    }
     const clickMenuItem = (item) => {
         window.location.href = item
     }
@@ -33,7 +27,7 @@ export default function RootLayout({
             <body>
                 <Layout>
                     <Sider
-                        theme='dark'
+                        theme='light'
                         collapsed={collapsed}
                         style={{
                             overflow: 'auto',
@@ -47,14 +41,14 @@ export default function RootLayout({
                         <Menu onClickMenuItem={clickMenuItem} theme='dark' accordion={false}>
                             {
                                 menu.map(item => {
-                                    return <MenuItem key={item.key} className={activeMenuKey == item.key ? 'active-menu' : ''}>
+                                    return <MenuItem key={item.key} >
                                        {item.icon}{item.title}
                                     </MenuItem>
                                 })
                             }
                         </Menu>
                     </Sider>
-                    <Layout style={{ marginLeft: getMarginLeft(), padding: '10px 20px' }}>
+                    <Layout style={{ marginLeft: '200px', padding: '10px 20px' }}>
                         {children}
                     </Layout>
                 </Layout>

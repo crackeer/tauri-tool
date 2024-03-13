@@ -21,7 +21,7 @@ use rust_box::tauri_command::network::{get_local_addr};
 
 use rust_box::tauri_command::file::{
     create_dir, create_file, delete_file, delete_folder, get_file_content, rename_file,
-    simple_read_dir, write_file, write_media_file, file_exists
+    list_folder, write_file, write_media_file, file_exists
 };
 
 use command::work::{
@@ -57,7 +57,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             get_file_content,
             write_file,
-            simple_read_dir,
+            list_folder,
             set_window_title,
             write_media_file,
             create_dir,

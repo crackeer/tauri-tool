@@ -1,4 +1,5 @@
-use rust_box::toolbox::file;
+use rust_box::toolbox::http_request;
+use rust_box::toolbox::zip;
 use base64::{engine::general_purpose, Engine as _};
 use reqwest;
 use rust_embed::RustEmbed;
@@ -304,7 +305,7 @@ fn create_file_directory(dest: &str) -> Result<(), String> {
 
 async fn download_src_model(url: &str, dir: &str) -> Result<(), String> {
     let dest = Path::new(dir).join(&"src_model.tar");
-    file::download_file_to(url, dest.to_str().unwrap()).await?;
+    http_request::download_file_to(url, dest.to_str().unwrap()).await?;
     let tar_gz = File::open(dest.clone());
     if let Err(err) = tar_gz {
         return Err(err.to_string());
@@ -324,7 +325,7 @@ async fn download_src_model(url: &str, dir: &str) -> Result<(), String> {
         .join(&"src_model")
         .join(&"material")
         .join(&"material_texture");
-    file::extract_zip(
+    zip::extract(
         material_zip_path.to_str().unwrap(),
         extract_material_path.to_str().unwrap(),
     )?;
@@ -334,7 +335,7 @@ async fn download_src_model(url: &str, dir: &str) -> Result<(), String> {
 
 async fn download_src_pano(url: &str, dir: &str) -> Result<(), String> {
     let dest = Path::new(dir).join(&"src_pano.tar");
-    file::download_file_to(url, dest.to_str().unwrap()).await?;
+    http_request::download_file_to(url, dest.to_str().unwrap()).await?;
     let tar_gz = File::open(dest.clone());
     if let Err(err) = tar_gz {
         return Err(err.to_string());
