@@ -33,7 +33,7 @@ class ClassApp extends React.Component {
         }
     }
     componentDidMount = async () => {
-        let collapsed = await cache.getMenuCollapsed() > 0
+        let collapsed =  0
         await this.setState({
             collapsed: collapsed,
             marginLeft: getMarginLeft(collapsed)
@@ -59,7 +59,7 @@ class ClassApp extends React.Component {
             collapsed: value,
             marginLeft: getMarginLeft(value),
         })
-        cache.setMenuCollapsed(value ? 1 : 0)
+        //cache.setMenuCollapsed(value ? 1 : 0)
     }
     clickMenuItem = async (key) => {
         window.location.href = key

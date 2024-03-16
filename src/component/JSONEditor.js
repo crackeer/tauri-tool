@@ -10,6 +10,7 @@ export default class JSONEditor extends Component {
     async componentDidMount () {
         const options = {
             mode: 'code',
+            indentation : 4,
             onValidate: this.props.onValidate,
             templates : this.props.templates,
             onChangeText : this.props.onChangeText,

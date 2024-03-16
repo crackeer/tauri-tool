@@ -12,10 +12,10 @@ extern crate lazy_static;
 extern crate rust_box;
 use rust_box::tauri_command::{
     http_server::{static_server_status, start_static_server, stop_static_server}, 
-    http_request::{request, parse_js_code, parse_html_title},
+    http_request::{do_http_request, parse_js_code, parse_html_title},
 };
 use rust_box::tauri_command::ssh::{
-    ls_files, download_remote_file, upload_remote_file, remote_exec_cmd
+    remote_list_files, download_remote_file, upload_remote_file, remote_exec_command
 };
 use rust_box::tauri_command::network::{get_local_addr};
 
@@ -24,13 +24,6 @@ use rust_box::tauri_command::file::{
     list_folder, write_file, write_media_file, file_exists
 };
 
-use command::work::{
-    add_work_download_task, query_all_task_state
-};
-
-use command::project::{
-    add_project_download_task, query_project_download_state
-};
 
 
 use tauri::{CustomMenuItem, Menu, MenuItem, Submenu};
@@ -66,20 +59,16 @@ fn main() {
             delete_folder,
             rename_file,
             file_exists,
-            add_work_download_task,
-            query_all_task_state,
-            add_project_download_task, 
-            query_project_download_state,
             parse_js_code,
             parse_html_title,
-            ls_files,
+            remote_list_files,
             download_remote_file,
             upload_remote_file,
-            remote_exec_cmd,
+            remote_exec_command,
             static_server_status,
             start_static_server,
             stop_static_server,
-            request,
+            do_http_request,
             get_local_addr
         ])
         .menu(menu)
