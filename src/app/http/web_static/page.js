@@ -1,6 +1,5 @@
 'use client'
 import React from "react";
-const path = require('path');
 import { open } from "@tauri-apps/api/dialog";
 import { Button, Card, Message, Form, Input, Grid, Breadcrumb, Radio, Divider, Space, Link, Table } from "@arco-design/web-react";
 import { IconPlayArrow, IconLoading, IconObliqueLine, IconHome } from "@arco-design/web-react/icon";
