@@ -23,9 +23,9 @@ var readDir = async (dir, ext) => {
     return list
 }
 
-var simpleReadDir = async (dir, ext) => {
-    let list = await invoke('simple_read_dir', {
-        dir, ext
+var simpleReadDir = async (dir) => {
+    let list = await invoke('list_folder', {
+        filePath : dir
     })
     return list
 }

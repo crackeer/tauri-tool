@@ -1,43 +1,94 @@
 'use client'
 import React from "react";
+const path = require('path');
 import { open } from "@tauri-apps/api/dialog";
-import {
-    Button,
-    Card,
-    Message,
-    Form,
-    Input,
-    Grid,
-    Breadcrumb,
-    Radio,
-    Divider,
-    Space,
-    Link,
-} from "@arco-design/web-react";
-import { IconPlayArrow, IconLoading } from "@arco-design/web-react/icon";
+import { Button, Card, Message, Form, Input, Grid, Breadcrumb, Radio, Divider, Space, Link, Table } from "@arco-design/web-react";
+import { IconPlayArrow, IconLoading, IconObliqueLine, IconHome } from "@arco-design/web-react/icon";
 import cache from "@/util/cache";
 import invoke from "@/util/invoke";
 import { getQuery } from "@/util/common";
+import { open as shellOpen } from '@tauri-apps/api/shell';
 const FormItem = Form.Item;
 const RadioGroup = Radio.Group;
 const BreadcrumbItem = Breadcrumb.Item;
+
+async function generateQuickDirs(rootDir, currentDir) {
+    const { sep } = await import('@tauri-apps/api/path');
+    let list = [{
+        name: rootDir,
+        path: "ROOT",
+        icon: <IconHome />
+    }]
+    if (currentDir.length < 1 || rootDir == currentDir) {
+        return list;
+    }
+    let absPath = currentDir.substr(rootDir.length + 1);
+    console.log("generateQuickDirs", absPath, rootDir, currentDir)
+    let parts = absPath.split(sep)
+    for (var i = 0; i < parts.length; i++) {
+        if (parts[i].length > 0) {
+            list.push({
+                path: parts.slice(0, i + 1).join(sep),
+                name: parts[i],
+            })
+        }
+    }
+    return list
+}
+
 class App extends React.Component {
+    columns = [
+        {
+            'title': '名字',
+            'dataIndex': 'name',
+            'key': 'name',
+            'render': (col, record, index) => (
+                record.file_type == 'directory' ? <a href="javascript:;" onClick={this.selectDir.bind(this, record.name)} style={{ textDecoration: 'none' }}>{record.name}</a> : <span>{record.name}</span>
+            )
+        },
+        {
+            'title': '大小',
+            'dataIndex': 'human_size',
+            'key': 'human_size',
+        },
+        {
+            'title': '操作',
+            'key': 'opt',
+            'align': 'center',
+            'render': (col, record, index) => {
+                return <Space>
+                    {record.file_type != 'directory' ? <Link onClick={this.openFile.bind(this, record)} size="mini" >查看</Link> : null }
+                </Space>
+            }
+        }
+    ]
     constructor(props) {
         super(props);
         this.state = {
             staticPath: "",
             port: 8888,
             running: 0,
-            local_addr: '',
+            local_addr: 'localhost',
+            currentFilePath: '',
+            quickDirs: [],
+            fileList: [],
         };
     }
     async componentDidMount() {
         let result = await invoke.httpServerStatus()
+        let addrResult = await invoke.getLocalAddr()
+        if (addrResult.success){
+            this.setState({local_addr : addrResult.data.addr})
+        }
         if (result.success && result.data.running > 0) {
-            this.setState(result.data)
+            this.setState(result.data, () => {
+                this.setState({ currentFilePath: result.data.staticPath }, this.showFiles)
+            });
         } else {
             let data = await cache.getStaticServerConfig();
-            this.setState(data);
+            this.setState(data, () => {
+                this.setState({ currentFilePath: data.staticPath }, this.showFiles)
+            });
         }
     }
     selectStaticPath = async () => {
@@ -50,12 +101,57 @@ class App extends React.Component {
         }
         this.setState({
             staticPath: selected,
-        });
+            currentFilePath: selected,
+        }, this.showFiles);
         cache.setStaticServerConfig({
             staticPath: selected,
             port: this.state.port,
         })
     };
+    showFiles = async () => {
+        if (this.state.currentFilePath.length < 1) {
+            return;
+        }
+        let quickDirs = await generateQuickDirs(this.state.staticPath, this.state.currentFilePath)
+        console.log(`Generating ${quickDirs}`, quickDirs)
+        try {
+            let result = await invoke.simpleReadDir(this.state.currentFilePath);
+            if (result.success) {
+                result.data.sort((a, b) => {
+                    if (a.file_type === 'directory') {
+                        return -1
+                    }
+                    return 1
+                })
+                this.setState({
+                    quickDirs: quickDirs,
+                    fileList: result.data,
+                });
+            }
+
+        } catch (e) {
+            console.error(e)
+            Message.error(e.message());
+        }
+    }
+    goDir = async (item) => {
+        if(item.path === 'ROOT') {
+            this.setState({
+                currentFilePath: this.state.staticPath
+            }, this.showFiles);
+            return;
+        }
+        const { sep } = await import('@tauri-apps/api/path');
+        this.setState({
+            currentFilePath: this.state.staticPath + sep + item.path,
+        }, this.showFiles);
+    }
+    selectDir = async (name) => {
+        const { sep } = await import('@tauri-apps/api/path');
+        this.setState({
+            currentFilePath: this.state.currentFilePath + sep + name,
+        }, this.showFiles);
+    }
     setPort = async (value) => {
         this.setState({
             port: value,
@@ -76,15 +172,10 @@ class App extends React.Component {
         }
         let result = await invoke.startHTTPServer(this.state.staticPath, parseInt(this.state.port))
         if (result.success) {
-            result = await invoke.getLocalAddr()
-            if (result.success) {
-                Message.success("静态资源服务启动成功")
-                this.setState({
-                    running: 1,
-                    local_addr: result.data.addr,
-                })
-            }
-            
+            Message.success("静态资源服务启动成功")
+            this.setState({
+                running: 1,
+            })
 
             return
         } else {
@@ -103,10 +194,17 @@ class App extends React.Component {
             Message.error(result.message)
         }
     }
+    openFile = async (item) => {
+        if (item.file_type == 'file') {
+            let absPath = this.state.currentFilePath + '/' + item.name
+            absPath = absPath.substr(this.state.staticPath.length + 1).replace(/\\/g, '/')
+            shellOpen('http://' + this.state.local_addr + ":" + this.state.port + '/' + absPath)
+        }
+    }
 
     render() {
         return <div>
-            <Card  >
+            <Card  title={'本机：' + this.state.local_addr}>
                 <Form autoComplete="off">
                     <FormItem label="静态资源文件夹" >
                         <Grid.Row gutter={8}>
@@ -142,11 +240,18 @@ class App extends React.Component {
                             {
                                 this.state.local_addr.length > 0 ? <Link href={'http://' + this.state.local_addr + ':' + this.state.port} target='_blank'>http://{this.state.local_addr}:{this.state.port}</Link> : null
                             }
-                            <Link href={'http://localhost:' + this.state.port} target='_blank'>http://localhost:{this.state.port}</Link>
                         </Space> </Divider> : null
                     }
-
                 </Form>
+                <Space split={<IconObliqueLine />} align={'center'} style={{ marginRight: '0', marginBottom: '15px' }} >
+                    {
+                        this.state.quickDirs.map(item => {
+                            return <Link onClick={this.goDir.bind(this, item)} key={item.path} icon={item.icon}>{item.name}</Link>
+                        })
+                    }
+                </Space>
+                <Table data={this.state.fileList} columns={this.columns} pagination={false} rowKey={'name'}
+                    footer={this.state.currentFilePath} />
             </Card>
         </div>;
     }
