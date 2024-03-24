@@ -1,4 +1,4 @@
-import { writeTextFile, BaseDirectory, readTextFile } from '@tauri-apps/api/fs';
+import { writeTextFile, BaseDirectory, readTextFile, removeFile } from '@tauri-apps/api/fs';
 import dayjs from 'dayjs';
 
 const MenuCollapsed = "MenuCollapsed";
@@ -23,6 +23,14 @@ var get = async (key) => {
 var set = async (key, value) => {
     try {
         return await writeTextFile(key, value, { dir: BaseDirectory.Cache });
+    } catch(e) {
+        return false;
+    }
+}
+
+var remove = async (key) => {
+    try {
+        return await removeFile(key, { dir: BaseDirectory.Cache });
     } catch(e) {
         return false;
     }
@@ -97,7 +105,5 @@ var setStaticServerConfig = async (config) => {
 
 
 export default {
-    set, get, setJSON, getJSON,
-    getStaticServerConfig,
-    setStaticServerConfig
+    set, get, remove, setJSON, getJSON, getStaticServerConfig, setStaticServerConfig
 }

@@ -21,16 +21,21 @@
             },
             "http": {
                 "all": true,
-                "scope": [],
+                "scope": [
+                    "https://*.github.com/*",
+                    "https://gist.githubusercontent.com/*"
+                ],
                 "request": true
             },
             "protocol": {
-                "all" : true,
+                "all": true,
                 "asset": true,
-                "assetScope": ["**"]
+                "assetScope": [
+                    "**"
+                ]
             },
             "clipboard": {
-                "all": true, 
+                "all": true,
                 "writeText": true,
                 "readText": true
             }
