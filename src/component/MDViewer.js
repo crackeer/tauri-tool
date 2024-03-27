@@ -32,7 +32,7 @@ const MDViewer = (props) => {
     useEffect(() => {
         initValue()
     }, [])
-    return <Viewer value={props.value} plugins={[image(props.file, sep), ...plugins]} />   
+    return <Viewer value={props.value} plugins={[ ...plugins]} />   
 }
 
 export default MDViewer;

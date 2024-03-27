@@ -1,21 +1,21 @@
+'use client'
 import React from 'react';
-
 import 'bytemd/dist/index.css'
-import { useEffect } from 'react'
 import 'highlight.js/styles/default.css'
 import 'katex/dist/katex.css'
+import { useEffect } from 'react'
 import 'github-markdown-css/github-markdown-light.css'
 import highlight from '@bytemd/plugin-highlight';
 import mermaid from '@bytemd/plugin-mermaid';
 import gfm from '@bytemd/plugin-gfm'
 import math from '@bytemd/plugin-math'
-import image from '../plugins/image'
+import image from '@/plugins/image'
 
 import mediumZoom from '@bytemd/plugin-medium-zoom'
 import gemoji from '@bytemd/plugin-gemoji'
 import frontmatter from '@bytemd/plugin-frontmatter'
 import { Editor, Viewer } from '@bytemd/react'
-import { uploadFile, readFile, writeFile } from '../util/invoke'
+import { uploadFile, readFile, writeFile } from '@/util/invoke'
 import dayjs from 'dayjs'
 import rehypeExternalLinks from '@/plugins/external-link'
 
@@ -66,10 +66,12 @@ const MDEditor = (props) => {
 
     return <Editor
         value={props.value}
-        plugins={[image(props.file, sep), ...plugins]}
+        plugins={[ ...plugins]}
         mode={props.editMode || 'split'}
         uploadImages={doUploadImages}
-        onChange={props.onChangeText} />
+        onChange={props.onChangeText} 
+        height={props.height}
+    />
 }
 
 export default MDEditor;

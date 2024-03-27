@@ -19,7 +19,7 @@ use rust_box::tauri_command::ssh::{
 use rust_box::tauri_command::network::{get_local_addr};
 
 use rust_box::tauri_command::file::{
-    create_dir, create_file, delete_file, delete_folder, get_file_content, rename_file,
+    create_dir, create_file, delete_file, delete_dir, get_file_content, rename_file,
     list_folder, write_file, write_media_file, file_exists
 };
 
@@ -55,7 +55,7 @@ fn main() {
             create_dir,
             create_file,
             delete_file,
-            delete_folder,
+            delete_dir,
             rename_file,
             file_exists,
             parse_js_code,
