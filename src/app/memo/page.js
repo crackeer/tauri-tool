@@ -21,23 +21,48 @@ const initMemoDir = async () => {
     return
 }
 
+const readMemoTop = async () => {
+    let flag = await exists('memo_top', { dir: BaseDirectory.AppData });
+    if (!flag) {
+        return ''
+    }
+    return await readTextFile('memo_top', { dir: BaseDirectory.AppData });
+}
+
 const readMemo = async () => {
     const { sep } = await import('@tauri-apps/api/path')
     let list = await readDir('memo', { dir: BaseDirectory.AppData, recursive: false });
-    console.log(list);
     let retData = [];
+    let topName = await readMemoTop()
     for (var i in list) {
         let contents = await readTextFile('memo' + sep + list[i].name, { dir: BaseDirectory.AppData });
-        console.log(contents);
-        retData.push({
+        let tmp = {
             name: list[i].name,
             time: dayjs.unix(list[i].name).format('YYYY-MM-DD HH:mm:ss'),
-            content: contents
-        })
+            content: contents,
+            top: false
+        }
+        if (topName === list[i].name) {
+            tmp.top = true
+        }
+
+        retData.push(tmp)
     }
-    retData = retData.sort((a,b) => {
+
+    retData = retData.sort((a, b) => {
+
         return b.name - a.name;
     })
+
+    retData = retData.sort((a, b) => {
+        if (a.top) {
+            return -1
+        }
+        return 1
+    })
+
+
+    console.log(retData)
     return retData;
 }
 
@@ -49,6 +74,14 @@ const writeMemo = async (name, content) => {
 const deleteMemo = async (name) => {
     const { sep } = await import('@tauri-apps/api/path')
     return await removeFile('memo' + sep + name, { dir: BaseDirectory.AppData, recursive: false });
+}
+
+const markTop = async (name) => {
+    await writeTextFile('memo_top', name, { dir: BaseDirectory.AppData });
+}
+
+const cancelTop = async (name) => {
+    await removeFile('memo_top', { dir: BaseDirectory.AppData });
 }
 
 export default function App() {
@@ -75,14 +108,24 @@ export default function App() {
 
     const handleDeleteMemo = async (item) => {
         Modal.confirm({
-            title : '删除提醒',
-            content : '确认删除这条记录？',
-            onOk : async () => {
+            title: '删除提醒',
+            content: '确认删除这条记录？',
+            onOk: async () => {
                 await deleteMemo(item.name)
                 Message.success('删除成功')
                 getSetMemo()
             }
         })
+    }
+
+    const handleMarkTop = async (item) => {
+        if (item.top) {
+            await cancelTop(item.name + '')
+        } else {
+            await markTop(item.name + '')
+        }
+
+        getSetMemo()
     }
 
     const handleEditMemo = async (item) => {
@@ -105,14 +148,13 @@ export default function App() {
                 <Button onClick={saveMessage} type='primary' size='large' style={{ position: 'absolute', bottom: 10 }}>保存</Button>
             </Col>
         </Row>
-        <h2 style={{ margin: '30px auto', width:'88%',  }}>
+        <h2 style={{ margin: '30px auto', width: '88%', }}>
             记录列表
             <hr />
         </h2>
-        
         {
             list.map(item => {
-                return <Card style={{ margin: '20px auto', width:'90%',  }} bordered={true} hoverable={true} actions={[<Button type='text' size='mini' onClick={handleEditMemo.bind(this, item)}>修改</Button>, <Button type='text' size='mini' onClick={handleDeleteMemo.bind(this, item)}>删除</Button>, item.time, ]}>
+                return <Card style={{ margin: '20px auto', width: '90%', border: item.top ? '1px solid gray' : '' }} bordered={true} hoverable={true} actions={[<Button type='text' size='mini' onClick={handleMarkTop.bind(this, item)}>{!item.top ? '置顶' : '取消置顶'}</Button>, <Button type='text' size='mini' onClick={handleEditMemo.bind(this, item)}>修改</Button>, <Button type='text' size='mini' onClick={handleDeleteMemo.bind(this, item)}>删除</Button>, item.time,]}>
                     <MDViewer value={item.content} />
                 </Card>
             })
