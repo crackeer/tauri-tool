@@ -9,28 +9,26 @@ extern crate lazy_static;
 
 #[macro_use]
 extern crate rust_box;
-use rust_box::tauri_command::{
-    http_server::{static_server_status, start_static_server, stop_static_server}, 
-    http_request::{do_http_request, parse_js_code, parse_html_title},
-};
+use rust_box::tauri_command::network::get_local_addr;
 use rust_box::tauri_command::ssh::{
-    remote_list_files, download_remote_file, upload_remote_file, remote_exec_command
+    download_remote_file, remote_exec_command, remote_list_files, upload_remote_file,
 };
-use rust_box::tauri_command::network::{get_local_addr};
+use rust_box::tauri_command::{
+    http_request::{do_http_request, parse_github_ip, parse_html_title, parse_js_code},
+    http_server::{start_static_server, static_server_status, stop_static_server},
+};
 
 use rust_box::tauri_command::file::{
-    create_dir, create_file, delete_file, delete_dir, get_file_content, rename_file,
-    list_folder, write_file, write_media_file, file_exists
+    create_dir, create_file, delete_dir, delete_file, file_exists, get_file_content, list_folder,
+    rename_file, write_file, write_media_file,
 };
-
-
 
 use tauri::{CustomMenuItem, Menu, MenuItem, Submenu};
 use tauri::{Window, WindowMenuEvent};
 
 fn main() {
     // 这里 `"quit".to_string()` 定义菜单项 ID，第二个参数是菜单项标签。
-    /* 
+    /*
     let close = CustomMenuItem::new("open_folder".to_string(), "Open Folder");
     let submenu = Submenu::new("File", Menu::new().add_item(close));
     */
@@ -68,7 +66,8 @@ fn main() {
             start_static_server,
             stop_static_server,
             do_http_request,
-            get_local_addr
+            get_local_addr,
+            parse_github_ip
         ])
         .menu(menu)
         .on_menu_event(window_menu_event)

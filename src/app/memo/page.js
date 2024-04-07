@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import { Card, Avatar, Link, Typography, Space, Input, Button, Message, Radio, Divider, Modal, Grid } from '@arco-design/web-react';
+import { Card, Avatar, Link, Typography, Space, Input, Button, Message, Radio, Divider, Modal, Grid, Affix } from '@arco-design/web-react';
 import api from '@/util/api'
 import cache from '@/util/cache'
 import JSONEditor from '@/component/JSONEditor';
@@ -60,9 +60,6 @@ const readMemo = async () => {
         }
         return 1
     })
-
-
-    console.log(retData)
     return retData;
 }
 
@@ -140,25 +137,26 @@ export default function App() {
 
 
     return <div id="app">
-        <Row gutter={20}>
-            <Col span={22}>
-                <MDEditor editMode="auto" value={value} onChangeText={setValue} />
+        <Row gutter={2} >
+            <Col span={9} className="bytemd-h600">
+                <Affix offsetTop={30}>
+                    <MDEditor editMode="tab" value={value} onChangeText={setValue} />
+                    <p style={{ textAlign: 'right' }}>
+                        <Button onClick={saveMessage} type='primary'>保存</Button>
+                    </p>
+                </Affix>
             </Col>
-            <Col span={2} style={{ height: '300px' }}>
-                <Button onClick={saveMessage} type='primary' size='large' style={{ position: 'absolute', bottom: 10 }}>保存</Button>
+
+            <Col span={15}>
+                {
+                    list.map(item => {
+                        return <Card style={{ margin: '20px auto', width: '90%', border: item.top ? '1px solid gray' : '' }} bordered={true} hoverable={true} actions={[<Button type='text' size='mini' onClick={handleMarkTop.bind(this, item)}>{!item.top ? '置顶' : '取消置顶'}</Button>, <Button type='text' size='mini' onClick={handleEditMemo.bind(this, item)}>修改</Button>, <Button type='text' size='mini' onClick={handleDeleteMemo.bind(this, item)}>删除</Button>, item.time,]}>
+                            <MDViewer value={item.content} />
+                        </Card>
+                    })
+                }
             </Col>
         </Row>
-        <h2 style={{ margin: '30px auto', width: '88%', }}>
-            记录列表
-            <hr />
-        </h2>
-        {
-            list.map(item => {
-                return <Card style={{ margin: '20px auto', width: '90%', border: item.top ? '1px solid gray' : '' }} bordered={true} hoverable={true} actions={[<Button type='text' size='mini' onClick={handleMarkTop.bind(this, item)}>{!item.top ? '置顶' : '取消置顶'}</Button>, <Button type='text' size='mini' onClick={handleEditMemo.bind(this, item)}>修改</Button>, <Button type='text' size='mini' onClick={handleDeleteMemo.bind(this, item)}>删除</Button>, item.time,]}>
-                    <MDViewer value={item.content} />
-                </Card>
-            })
-        }
     </div>
 
 }
