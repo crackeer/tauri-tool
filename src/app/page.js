@@ -5,7 +5,6 @@ import {
     Button,
     Modal,
     List,
-    Link,
     Space,
     Message,
     Popconfirm,
@@ -168,7 +167,7 @@ class App extends React.Component {
     }
     render() {
         return (
-            <div style={{ padding: '5px' }}>
+            <div>
                 <JSONEditor
                     height={this.state.viewHeight}
                     ref={this.onJSONEditorReady}

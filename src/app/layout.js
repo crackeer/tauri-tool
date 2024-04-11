@@ -43,14 +43,15 @@ export default function RootLayout({
                         <Menu onClickMenuItem={clickMenuItem} theme='light' selectedKeys={activeMenuKey}>
                             {
                                 menu.map(item => {
-                                    return <MenuItem key={item.key} renderItemInTooltip={() => item.title}>
+                                    return <MenuItem key={item.key} renderitemintooltip={() => item.title}>
                                         {item.icon} {item.title}
                                     </MenuItem>
                                 })
                             }
                         </Menu>
                     </Sider>
-                    <Layout style={{ marginLeft: '48px' }}>
+                    <Layout style={{ marginLeft: '48px', padding: '2px' }}>
+
                         {children}
                     </Layout>
                 </Layout>

@@ -8,8 +8,6 @@ import invoke from "@/util/invoke";
 import { getQuery } from "@/util/common";
 import { open as shellOpen } from '@tauri-apps/api/shell';
 const FormItem = Form.Item;
-const RadioGroup = Radio.Group;
-const BreadcrumbItem = Breadcrumb.Item;
 
 async function generateQuickDirs(rootDir, currentDir) {
     const { sep } = await import('@tauri-apps/api/path');
@@ -56,7 +54,7 @@ class App extends React.Component {
             'align': 'center',
             'render': (col, record, index) => {
                 return <Space>
-                    {record.file_type != 'directory' ? <Link onClick={this.openFile.bind(this, record)} size="mini" >查看</Link> : null }
+                    {record.file_type != 'directory' ? <Link onClick={this.openFile.bind(this, record)} size="mini" >查看</Link> : null}
                 </Space>
             }
         }
@@ -76,8 +74,8 @@ class App extends React.Component {
     async componentDidMount() {
         let result = await invoke.httpServerStatus()
         let addrResult = await invoke.getLocalAddr()
-        if (addrResult.success){
-            this.setState({local_addr : addrResult.data.addr})
+        if (addrResult.success) {
+            this.setState({ local_addr: addrResult.data.addr })
         }
         if (result.success && result.data.running > 0) {
             this.setState(result.data, () => {
@@ -134,7 +132,7 @@ class App extends React.Component {
         }
     }
     goDir = async (item) => {
-        if(item.path === 'ROOT') {
+        if (item.path === 'ROOT') {
             this.setState({
                 currentFilePath: this.state.staticPath
             }, this.showFiles);
@@ -203,7 +201,7 @@ class App extends React.Component {
 
     render() {
         return <div>
-            <Card  title={'本机：' + this.state.local_addr}>
+            <Card title={'本机：' + this.state.local_addr}>
                 <Form autoComplete="off">
                     <FormItem label="静态资源文件夹" >
                         <Grid.Row gutter={8}>

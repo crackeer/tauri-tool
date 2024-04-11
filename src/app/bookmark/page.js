@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import { Card, Avatar, Link, Typography, Space, Row, Input, Button, Message, Radio, Divider, Modal } from '@arco-design/web-react';
+import { Card, Link, Space, Input, Button, Message, Radio, Divider, Modal } from '@arco-design/web-react';
 import api from '@/util/api'
 import cache from '@/util/cache'
 import JSONEditor from '@/component/JSONEditor';
@@ -104,7 +104,7 @@ export default function App() {
         setEditClassify(name)
         for (var i in bookmark) {
             if (bookmark[i].classify === name) {
-                if(editor != null) {
+                if (editor != null) {
                     editor.set(bookmark[i].list)
                 } else {
                     setTimeout(() => {
@@ -121,10 +121,10 @@ export default function App() {
         console.log(result)
     }
 
-    const clear = async function () {
+    const clear = async function() {
         cacheSetConfig({
-            token : '',
-            gist_id : '',
+            token: '',
+            gist_id: '',
         })
         Message.info('success')
     }
