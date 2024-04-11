@@ -168,7 +168,7 @@ class App extends React.Component {
     }
     render() {
         return (
-            <div>
+            <div style={{ padding: '5px' }}>
                 <JSONEditor
                     height={this.state.viewHeight}
                     ref={this.onJSONEditorReady}

@@ -1,5 +1,5 @@
 'use client'
-import { writeText, readText } from '@tauri-apps/api/clipboard';
+import { writeText } from '@tauri-apps/api/clipboard';
 import { Button, Message } from '@arco-design/web-react';
 import { IconCopy } from '@arco-design/web-react/icon';
 export default function clickToCopy(props) {

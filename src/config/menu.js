@@ -1,16 +1,15 @@
 import {
-  IconHome,
-  IconCodeSquare,
-  IconScan,
-  IconLiveBroadcast,
-  IconHighlight,
-  IconCodeBlock,
-  IconQrcode,
-  IconList,
+    IconStorage,
+    IconCodeSquare,
+    IconScan,
+    IconLiveBroadcast,
+    IconTool,
+    IconCodeBlock,
+    IconEdit,
 } from "@arco-design/web-react/icon";
 export default [
-  { key: "/", icon: <IconHome />, title: "JSON" },
-  { key: "/memo", icon: <IconList />, title: "Memo" },
-  { key: "/web/tool", icon: <IconHighlight />, title: "Web工具" },
-  { key: "/http/web_static", icon: <IconLiveBroadcast />, title: "SimpleHttp" },
+    { key: "/", icon: <IconCodeBlock />, title: "JSON" },
+    { key: "/memo", icon: <IconEdit />, title: "Memo" },
+    { key: "/web/tool", icon: <IconTool />, title: "Web工具" },
+    { key: "/http/web_static", icon: <IconStorage />, title: "SimpleHttp" },
 ];

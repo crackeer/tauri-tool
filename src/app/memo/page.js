@@ -8,7 +8,6 @@ import MDEditor from '@/component/MDEditor';
 import MDViewer from '@/component/MDViewer';
 import { exists, readDir, createDir, BaseDirectory, writeTextFile, readTextFile, removeFile } from '@tauri-apps/api/fs';
 import dayjs from 'dayjs';
-const RadioGroup = Radio.Group;
 const Row = Grid.Row;
 const Col = Grid.Col;
 
@@ -139,7 +138,7 @@ export default function App() {
     return <div id="app">
         <Row gutter={2} >
             <Col span={9} className="bytemd-h600">
-                <Affix offsetTop={30}>
+                <Affix offsetTop={5}>
                     <MDEditor editMode="tab" value={value} onChangeText={setValue} />
                     <p style={{ textAlign: 'right' }}>
                         <Button onClick={saveMessage} type='primary'>保存</Button>
@@ -150,7 +149,7 @@ export default function App() {
             <Col span={15}>
                 {
                     list.map(item => {
-                        return <Card style={{ margin: '20px auto', width: '90%', border: item.top ? '1px solid gray' : '' }} bordered={true} hoverable={true} actions={[<Button type='text' size='mini' onClick={handleMarkTop.bind(this, item)}>{!item.top ? '置顶' : '取消置顶'}</Button>, <Button type='text' size='mini' onClick={handleEditMemo.bind(this, item)}>修改</Button>, <Button type='text' size='mini' onClick={handleDeleteMemo.bind(this, item)}>删除</Button>, item.time,]}>
+                        return <Card style={{ margin: '5px auto', width: '98%' }} bordered={true} hoverable={true} actions={[<Button type='text' size='mini' onClick={handleMarkTop.bind(this, item)}>{!item.top ? '置顶' : '取消置顶'}</Button>, <Button type='text' size='mini' onClick={handleEditMemo.bind(this, item)}>修改</Button>, <Button type='text' size='mini' onClick={handleDeleteMemo.bind(this, item)}>删除</Button>, item.time,]}>
                             <MDViewer value={item.content} />
                         </Card>
                     })
