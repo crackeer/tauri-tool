@@ -208,8 +208,9 @@ var getLocalAddr = async () => {
     return await invoke('get_local_addr', {})
 }
 
-var runJsCode = async (code) => {
+var runJsCode = async (nodePath, code) => {
     return await invoke('run_js_code', {
+        nodePath,
         code
     })
 }
