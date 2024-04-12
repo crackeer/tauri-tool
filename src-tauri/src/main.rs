@@ -22,6 +22,7 @@ use rust_box::tauri_command::file::{
     create_dir, create_file, delete_dir, delete_file, file_exists, get_file_content, list_folder,
     rename_file, write_file, write_media_file,
 };
+use rust_box::tauri_command::js::run_js_code;
 
 use tauri::{CustomMenuItem, Menu, MenuItem, Submenu};
 use tauri::{Window, WindowMenuEvent};
@@ -67,7 +68,8 @@ fn main() {
             stop_static_server,
             do_http_request,
             get_local_addr,
-            parse_github_ip
+            parse_github_ip,
+            run_js_code
         ])
         .menu(menu)
         .on_menu_event(window_menu_event)
