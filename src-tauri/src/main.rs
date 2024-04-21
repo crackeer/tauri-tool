@@ -4,8 +4,8 @@
 )]
 use std::vec;
 
-#[macro_use]
 extern crate lazy_static;
+use tauri_plugin_sql::{Builder, Migration, MigrationKind};
 
 #[macro_use]
 extern crate rust_box;
@@ -24,15 +24,10 @@ use rust_box::tauri_command::file::{
 };
 use rust_box::tauri_command::js::run_js_code;
 
-use tauri::{CustomMenuItem, Menu, MenuItem, Submenu};
+use tauri::{Menu, MenuItem, Submenu};
 use tauri::{Window, WindowMenuEvent};
 
 fn main() {
-    // 这里 `"quit".to_string()` 定义菜单项 ID，第二个参数是菜单项标签。
-    /*
-    let close = CustomMenuItem::new("open_folder".to_string(), "Open Folder");
-    let submenu = Submenu::new("File", Menu::new().add_item(close));
-    */
     let native_menu = Submenu::new(
         "System",
         Menu::new()
@@ -45,6 +40,11 @@ fn main() {
     //let menu = Menu::os_default(&"sss");
     let ctx = tauri::generate_context!();
     tauri::Builder::default()
+        .plugin(
+            tauri_plugin_sql::Builder::default()
+                .add_migrations("sqlite:sqlite.db", get_sqlite_migrations())
+                .build(),
+        )
         .invoke_handler(tauri::generate_handler![
             get_file_content,
             write_file,
@@ -96,4 +96,24 @@ fn window_menu_event(event: WindowMenuEvent) {
         }
         &_ => todo!(),
     }
+}
+
+fn get_sqlite_migrations() -> Vec<Migration> {
+    vec![
+        // Define your migrations here
+        Migration {
+            version: 1,
+            description: "create_initial_tables",
+            sql: "CREATE TABLE content (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                content_type TEXT NOT NULL,
+                tag TEXT NOT NULL,
+                create_at INTEGER DEFAULT '0',
+                modify_at INTEGER DEFAULT '0'
+            );",
+            kind: MigrationKind::Up,
+        },
+    ]
 }

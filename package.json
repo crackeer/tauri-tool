@@ -42,6 +42,7 @@
     "react-scripts": "5.0.1",
     "rehype-external-links": "^2.1.0",
     "rehype-urls": "^1.1.1",
+    "tauri-plugin-sql-api": "github:tauri-apps/tauri-plugin-sql#v1",
     "url": "^0.11.0",
     "vditor": "^3.8.17",
     "web-vitals": "^2.1.4"
